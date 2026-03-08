@@ -7,15 +7,9 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      --verde: #2f6f4e;
-      --verde-claro: #e6f1eb;
-      --azul: #2c4f7c;
-      --tierra: #8b6f47;
-      --rojo: #e74c3c;
-      --gris: #7f8c8d;
-      --fondo: #f7f9f8;
-      --blanco: #ffffff;
-      --borde: #ddd;
+      --verde: #2f6f4e; --verde-claro: #e6f1eb; --azul: #2c4f7c;
+      --tierra: #8b6f47; --rojo: #e74c3c; --gris: #7f8c8d;
+      --fondo: #f7f9f8; --blanco: #ffffff; --borde: #ddd;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: system-ui, -apple-system, sans-serif; background: var(--fondo); color: #333; line-height: 1.5; }
@@ -284,20 +278,20 @@
       document.getElementById('kpiDesmejorados').textContent = datosGlobales.listados.animalesDesmejorados.length;
     }
     
-    // === RENDERIZAR GRÁFICOS ===
+    // === RENDERIZAR GRÁFICOS ✅ CORREGIDO ===
     function renderizarGraficos() {
-      // Gráfico de Evolución
+      // Gráfico de Evolución General
       const ctxEvol = document.getElementById('chartEvolucion').getContext('2d');
       if (chartEvolucion) chartEvolucion.destroy();
       
       const datosEvol = datosGlobales.graficos.evolucionGananciaGeneral;
       chartEvolucion = new Chart(ctxEvol, {
         type: 'line',
-         {
+         {  // ✅ CORREGIDO: Agregada clave ""
           labels: datosEvol.map(d => d.mes),
           datasets: [{
             label: 'Ganancia Diaria Promedio (kg/día)',
-             datosEvol.map(d => d.gananciaDiariaPromedio),
+             datosEvol.map(d => d.gananciaDiariaPromedio),  // ✅ CORREGIDO: Agregada clave ""
             borderColor: '#2f6f4e',
             backgroundColor: 'rgba(47, 111, 78, 0.1)',
             fill: true,
@@ -314,24 +308,24 @@
       const distribucion = datosGlobales.graficos.distribucionGananciaDiaria;
       chartDistribucion = new Chart(ctxDist, {
         type: 'doughnut',
-         {
+         {  // ✅ CORREGIDO: Agregada clave "data:"
           labels: Object.keys(distribucion),
           datasets: [{
-             Object.values(distribucion),
+             Object.values(distribucion),  // ✅ CORREGIDO: Agregada clave ""
             backgroundColor: ['#e74c3c', '#f39c12', '#f1c40f', '#2ecc71', '#27ae60', '#2f6f4e']
           }]
         },
         options: { responsive: true, maintainAspectRatio: false }
       });
       
-      // Gráfico por Lote (solo si hay datos)
+      // Gráfico por Lote
       const ctxLote = document.getElementById('chartPorLote').getContext('2d');
       if (chartPorLote) chartPorLote.destroy();
       
       const evolucionLotes = datosGlobales.graficos.evolucionPorLote;
       const datasetsLote = Object.entries(evolucionLotes).map(([lote, datos], i) => ({
         label: lote,
-         datos.map(d => d.gananciaDiariaPromedio),
+        data: datos.map(d => d.gananciaDiariaPromedio),  // ✅ CORREGIDO: Agregada clave ""
         borderColor: ['#2c4f7c', '#8b6f47', '#9b59b6', '#e74c3c', '#7f8c8d'][i % 5],
         fill: false,
         tension: 0.2
@@ -340,7 +334,7 @@
       if (datasetsLote.length > 0) {
         chartPorLote = new Chart(ctxLote, {
           type: 'line',
-           {
+          data: {  // ✅ CORREGIDO: Agregada clave ""
             labels: datasetsLote[0].data.map((_, i) => evolucionLotes[Object.keys(evolucionLotes)[0]][i]?.fecha || ''),
             datasets: datasetsLote
           },
@@ -428,7 +422,6 @@
       const filtroLote = document.getElementById('filtroLote');
       const filtroClasif = document.getElementById('filtroClasif');
       
-      // Lotes únicos
       const lotes = [...new Set(datosGlobales.listados.animalesConDatos.map(a => a.lote))].sort();
       lotes.forEach(lote => {
         const opt = document.createElement('option');
@@ -437,7 +430,6 @@
         filtroLote.appendChild(opt);
       });
       
-      // Clasificaciones únicas
       const clasifs = [...new Set(datosGlobales.listados.animalesConDatos.map(a => a.clasificacion).filter(c => c && c.toString().trim() !== ""))].sort();
       clasifs.forEach(clasif => {
         const opt = document.createElement('option');
@@ -456,7 +448,6 @@
       if (loteFiltro) datosFiltrados = datosFiltrados.filter(a => a.lote === loteFiltro);
       if (clasifFiltro) datosFiltrados = datosFiltrados.filter(a => a.clasificacion === clasifFiltro);
       
-      // Re-renderizar tabla de detalle con filtros
       const tbodyDetalle = document.getElementById('tbodyDetalle');
       tbodyDetalle.innerHTML = '';
       datosFiltrados.forEach(animal => {
@@ -488,20 +479,9 @@
       document.getElementById('loader').style.display = mostrar ? 'block' : 'none';
     }
     
-    function recargarDatos() {
-      cargarDatos();
-    }
-    
-    function imprimir() {
-      window.print();
-    }
-    
-    function cerrar() {
-      window.close();
-      if (window.opener) {
-        window.opener.focus();
-      }
-    }
+    function recargarDatos() { cargarDatos(); }
+    function imprimir() { window.print(); }
+    function cerrar() { window.close(); if (window.opener) { window.opener.focus(); } }
   </script>
 </body>
 </html>
