@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐄 Reporte de Pesaje Corporal - PYSIGA</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --verde: #2f6f4e; --verde-claro: #e6f1eb; --azul: #2c4f7c;
+      --tierra: #8b6f47; --rojo: #e74c3c; --gris: #7f8c8d;
+      --fondo: #f7f9f8; --blanco: #ffffff; --borde: #ddd;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--fondo); color: #333; line-height: 1.5; }
+    .container { max-width: 1200px; margin: auto; padding: 15px; }
+    
+    .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; margin-bottom: 20px; border-bottom: 2px solid var(--verde); }
+    .header h1 { color: var(--verde); font-size: 22px; }
+    .btn { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.9; }
+    .btn-primary { background: var(--verde); color: white; }
+    .btn-danger { background: var(--rojo); color: white; }
+    .btn-secondary { background: var(--tierra); color: white; }
+    
+    .card { background: var(--blanco); border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+    .card-title { font-size: 18px; font-weight: 600; color: var(--azul); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--borde); }
+    
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .kpi-card { background: var(--verde-claro); padding: 15px; border-radius: 8px; text-align: center; border-left: 4px solid var(--verde); }
+    .kpi-value { font-size: 24px; font-weight: 700; color: var(--verde); margin: 5px 0; }
+    .kpi-label { font-size: 13px; color: var(--gris); }
+    .kpi-unit { font-size: 12px; color: var(--gris); }
+    
+    .tabs { display: flex; gap: 5px; margin-bottom: 15px; flex-wrap: wrap; }
+    .tab { padding: 8px 16px; background: var(--gris); color: white; border: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 14px; }
+    .tab.active { background: var(--verde); font-weight: 600; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    .table-container { overflow-x: auto; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: var(--verde); color: white; padding: 10px 8px; text-align: left; position: sticky; top: 0; }
+    td { padding: 8px; border-bottom: 1px solid var(--borde); }
+    tr:hover { background: #f9f9f9; }
+    .negativo { color: var(--rojo); font-weight: 600; }
+    .positivo { color: var(--verde); font-weight: 600; }
+    
+    .chart-container { position: relative; height: 300px; margin: 20px 0; }
+    
+    .loader { text-align: center; padding: 40px; }
+    .loader .vaca { font-size: 40px; animation: mover 1s infinite alternate; margin-bottom: 15px; }
+    @keyframes mover { from { transform: translateX(-5px); } to { transform: translateX(5px); } }
+    
+    .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; align-items: center; }
+    .filters select, .filters input { padding: 8px 12px; border: 1px solid var(--borde); border-radius: 6px; font-size: 14px; }
+    
+    @media (max-width: 768px) {
+      .header { flex-direction: column; gap: 10px; text-align: center; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🐄 Reporte de Pesaje Corporal</h1>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-secondary" onclick="imprimir()">🖨️ Imprimir</button>
+        <button class="btn btn-danger" onclick="cerrar()">🚪 Cerrar</button>
+      </div>
+    </div>
+    
+    <div id="loader" class="card loader">
+      <div class="vaca">🐄</div>
+      <div>Cargando datos de pesaje y calculando KPIs…</div>
+    </div>
+    
+    <div id="contenido" style="display: none;">
+      <div class="card">
+        <div class="filters">
+          <label><strong>Filtrar por Lote:</strong></label>
+          <select id="filtroLote" onchange="aplicarFiltros()">
+            <option value="">Todos los lotes</option>
+          </select>
+          <label><strong>Clasificación:</strong></label>
+          <select id="filtroClasif" onchange="aplicarFiltros()">
+            <option value="">Todas</option>
+          </select>
+          <button class="btn btn-primary" onclick="recargarDatos()">🔄 Actualizar</button>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">📊 Indicadores Clave (KPIs)</div>
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Ganancia Diaria General</div>
+            <div class="kpi-value" id="kpiGananciaGeneral">--</div>
+            <div class="kpi-unit">kg/día promedio</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Kilos Totales Generales</div>
+            <div class="kpi-value" id="kpiKilosTotales">--</div>
+            <div class="kpi-unit">kg en último pesaje</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Animales Evaluados</div>
+            <div class="kpi-value" id="kpiTotalAnimales">--</div>
+            <div class="kpi-unit">con pesaje registrado</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Animales Desmejorados</div>
+            <div class="kpi-value" id="kpiDesmejorados" style="color: var(--rojo);">--</div>
+            <div class="kpi-unit">redujeron ganancia</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="tabs">
+        <button class="tab active" onclick="cambiarTab('general')">📈 Evolución General</button>
+        <button class="tab" onclick="cambiarTab('lotes')">📦 Por Lote</button>
+        <button class="tab" onclick="cambiarTab('clasificacion')">🏷️ Por Clasificación</button>
+        <button class="tab" onclick="cambiarTab('desmejorados')">⚠️ Animales Desmejorados</button>
+        <button class="tab" onclick="cambiarTab('detalle')">📋 Detalle Completo</button>
+      </div>
+      
+      <div id="tab-general" class="tab-content active">
+        <div class="card">
+          <div class="card-title">📈 Evolución de Ganancia Diaria Promedio</div>
+          <div class="chart-container">
+            <canvas id="chartEvolucion"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">⚖️ Distribución de Ganancia Diaria</div>
+          <div class="chart-container">
+            <canvas id="chartDistribucion"></canvas>
+          </div>
+        </div>
+      </div>
+      
+      <div id="tab-lotes" class="tab-content">
+        <div class="card">
+          <div class="card-title">📦 KPIs por Lote</div>
+          <div id="kpisPorLote"></div>
+          <div class="table-container">
+            <table id="tablaLotes">
+              <thead>
+                <tr><th>Lote</th><th>Animales</th><th>Kilos Totales</th><th>Ganancia Diaria Prom.</th></tr>
+              </thead>
+              <tbody id="tbodyLotes"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">📊 Evolución por Lote (Últimos Registros)</div>
+          <div class="chart-container">
+            <canvas id="chartPorLote"></canvas>
+          </div>
+        </div>
+      </div>
+      
+      <div id="tab-clasificacion" class="tab-content">
+        <div class="card">
+          <div class="card-title">🏷️ KPIs por Clasificación de Animal</div>
+          <div class="table-container">
+            <table id="tablaClasif">
+              <thead>
+                <tr><th>Clasificación</th><th>Animales</th><th>Kilos Totales</th><th>Ganancia Diaria Prom.</th></tr>
+              </thead>
+              <tbody id="tbodyClasif"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <div id="tab-desmejorados" class="tab-content">
+        <div class="card">
+          <div class="card-title">⚠️ Animales que Redujeron su Ganancia Diaria</div>
+          <p style="margin-bottom: 15px; color: var(--gris); font-size: 14px;">
+            Animales cuya ganancia diaria actual es menor que en el período anterior.
+          </p>
+          <div class="table-container">
+            <table id="tablaDesmejorados">
+              <thead>
+                <tr>
+                  <th>N° Práctico</th><th>Lote</th><th>Clasificación</th>
+                  <th>Ganancia Anterior</th><th>Ganancia Actual</th><th>Variación</th>
+                  <th>Peso Actual</th><th>Último Pesaje</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyDesmejorados"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <div id="tab-detalle" class="tab-content">
+        <div class="card">
+          <div class="card-title">📋 Detalle de Todos los Animales con Pesaje</div>
+          <div class="table-container">
+            <table id="tablaDetalle">
+              <thead>
+                <tr>
+                  <th>ID</th><th>N° Práctico</th><th>Lote</th><th>Clasificación</th>
+                  <th>Peso Actual</th><th>Ganancia Diaria</th><th>Último Pesaje</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyDetalle"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+  <script>
+    const WORKER_URL = "https://pysiga.d-alexjose.workers.dev";
+    const email = new URLSearchParams(window.location.search).get('email');
+    
+    let datosGlobales = null;
+    let chartEvolucion = null, chartDistribucion = null, chartPorLote = null;
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!email) {
+        alert('❌ No se encontró el correo del usuario. Accede desde el panel principal.');
+        window.close();
+        return;
+      }
+      cargarDatos();
+    });
+    
+    async function cargarDatos() {
+      mostrarLoader(true);
+      try {
+        const response = await fetch(WORKER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            accion: 'reportePesajeCorporal',
+            email: email,
+            token: 'pysiga-node'
+          })
+        });
+        const data = await response.json();
+        if (!data.ok) throw new Error(data.error || 'Error al cargar datos');
+        datosGlobales = data;
+        renderizarKPIs();
+        renderizarGraficos();
+        renderizarTablas();
+        poblarFiltros();
+        mostrarLoader(false);
+        document.getElementById('contenido').style.display = 'block';
+      } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error: ' + error.message);
+        mostrarLoader(false);
+      }
+    }
+    
+    function renderizarKPIs() {
+      const kpis = datosGlobales.kpis.general;
+      document.getElementById('kpiGananciaGeneral').textContent = kpis.gananciaDiariaPromedio.toFixed(2);
+      document.getElementById('kpiKilosTotales').textContent = kpis.kilosTotales.toLocaleString('es-VE', {maximumFractionDigits: 1});
+      document.getElementById('kpiTotalAnimales').textContent = kpis.totalAnimalesPesados;
+      document.getElementById('kpiDesmejorados').textContent = datosGlobales.listados.animalesDesmejorados.length;
+    }
+    
+    function renderizarGraficos() {
+      const ctxEvol = document.getElementById('chartEvolucion').getContext('2d');
+      if (chartEvolucion) chartEvolucion.destroy();
+      const datosEvol = datosGlobales.graficos.evolucionGananciaGeneral;
+      chartEvolucion = new Chart(ctxEvol, {
+        type: 'line',
+         {
+          labels: datosEvol.map(d => d.mes),
+          datasets: [{
+            label: 'Ganancia Diaria Promedio (kg/día)',
+             datosEvol.map(d => d.gananciaDiariaPromedio),
+            borderColor: '#2f6f4e',
+            backgroundColor: 'rgba(47, 111, 78, 0.1)',
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+      
+      const ctxDist = document.getElementById('chartDistribucion').getContext('2d');
+      if (chartDistribucion) chartDistribucion.destroy();
+      const distribucion = datosGlobales.graficos.distribucionGananciaDiaria;
+      chartDistribucion = new Chart(ctxDist, {
+        type: 'doughnut',
+         {
+          labels: Object.keys(distribucion),
+          datasets: [{
+             Object.values(distribucion),
+            backgroundColor: ['#e74c3c', '#f39c12', '#f1c40f', '#2ecc71', '#27ae60', '#2f6f4e']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+      
+      const ctxLote = document.getElementById('chartPorLote').getContext('2d');
+      if (chartPorLote) chartPorLote.destroy();
+      const evolucionLotes = datosGlobales.graficos.evolucionPorLote;
+      const datasetsLote = Object.entries(evolucionLotes).map(([lote, datos], i) => ({
+        label: lote,
+         datos.map(d => d.gananciaDiariaPromedio),
+        borderColor: ['#2c4f7c', '#8b6f47', '#9b59b6', '#e74c3c', '#7f8c8d'][i % 5],
+        fill: false,
+        tension: 0.2
+      }));
+      if (datasetsLote.length > 0) {
+        chartPorLote = new Chart(ctxLote, {
+          type: 'line',
+           {
+            labels: datasetsLote[0].data.map((_, i) => evolucionLotes[Object.keys(evolucionLotes)[0]][i]?.fecha || ''),
+            datasets: datasetsLote
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
+    }
+    
+    function renderizarTablas() {
+      const tbodyLotes = document.getElementById('tbodyLotes');
+      tbodyLotes.innerHTML = '';
+      Object.entries(datosGlobales.kpis.porLote).forEach(([lote, kpi]) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${lote}</strong></td>
+          <td>${kpi.totalAnimales}</td>
+          <td>${kpi.kilosTotales.toLocaleString('es-VE', {maximumFractionDigits: 1})}</td>
+          <td class="${kpi.gananciaDiariaPromedio < 0 ? 'negativo' : 'positivo'}">
+            ${kpi.gananciaDiariaPromedio !== null ? kpi.gananciaDiariaPromedio.toFixed(2) : 'N/A'}
+          </td>
+        `;
+        tbodyLotes.appendChild(tr);
+      });
+      
+      const tbodyClasif = document.getElementById('tbodyClasif');
+      tbodyClasif.innerHTML = '';
+      Object.entries(datosGlobales.kpis.porClasificacion).forEach(([clasif, kpi]) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${clasif}</strong></td>
+          <td>${kpi.totalAnimales}</td>
+          <td>${kpi.kilosTotales.toLocaleString('es-VE', {maximumFractionDigits: 1})}</td>
+          <td class="${kpi.gananciaDiariaPromedio < 0 ? 'negativo' : 'positivo'}">
+            ${kpi.gananciaDiariaPromedio !== null ? kpi.gananciaDiariaPromedio.toFixed(2) : 'N/A'}
+          </td>
+        `;
+        tbodyClasif.appendChild(tr);
+      });
+      
+      const tbodyDesm = document.getElementById('tbodyDesmejorados');
+      tbodyDesm.innerHTML = '';
+      datosGlobales.listados.animalesDesmejorados.forEach(animal => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${animal.numeroPractico}</td>
+          <td>${animal.lote}</td>
+          <td>${animal.clasificacion}</td>
+          <td class="positivo">${animal.gananciaDiariaAnterior.toFixed(2)}</td>
+          <td class="${animal.gananciaDiariaActual < 0 ? 'negativo' : animal.gananciaDiariaActual < animal.gananciaDiariaAnterior ? 'negativo' : 'positivo'}">
+            ${animal.gananciaDiariaActual.toFixed(2)}
+          </td>
+          <td class="negativo">${animal.variacion.toFixed(2)}</td>
+          <td>${animal.pesoActual.toLocaleString('es-VE')}</td>
+          <td>${animal.fechaUltimoPesaje}</td>
+        `;
+        tbodyDesm.appendChild(tr);
+      });
+      
+      const tbodyDetalle = document.getElementById('tbodyDetalle');
+      tbodyDetalle.innerHTML = '';
+      datosGlobales.listados.animalesConDatos.forEach(animal => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${animal.id}</td>
+          <td>${animal.numeroPractico}</td>
+          <td>${animal.lote}</td>
+          <td>${animal.clasificacion}</td>
+          <td>${animal.pesoActual.toLocaleString('es-VE', {maximumFractionDigits: 1})}</td>
+          <td class="${animal.gananciaDiaria < 0 ? 'negativo' : 'positivo'}">
+            ${animal.gananciaDiaria !== null ? animal.gananciaDiaria.toFixed(2) : 'N/A'}
+          </td>
+          <td>${animal.fechaUltimoPesaje}</td>
+        `;
+        tbodyDetalle.appendChild(tr);
+      });
+    }
+    
+    function poblarFiltros() {
+      const filtroLote = document.getElementById('filtroLote');
+      const filtroClasif = document.getElementById('filtroClasif');
+      const lotes = [...new Set(datosGlobales.listados.animalesConDatos.map(a => a.lote))].sort();
+      lotes.forEach(lote => {
+        const opt = document.createElement('option');
+        opt.value = lote;
+        opt.textContent = lote;
+        filtroLote.appendChild(opt);
+      });
+      const clasifs = [...new Set(datosGlobales.listados.animalesConDatos.map(a => a.clasificacion).filter(c => c && c.toString().trim() !== ""))].sort();
+      clasifs.forEach(clasif => {
+        const opt = document.createElement('option');
+        opt.value = clasif;
+        opt.textContent = clasif;
+        filtroClasif.appendChild(opt);
+      });
+    }
+    
+    function aplicarFiltros() {
+      const loteFiltro = document.getElementById('filtroLote').value;
+      const clasifFiltro = document.getElementById('filtroClasif').value;
+      let datosFiltrados = [...datosGlobales.listados.animalesConDatos];
+      if (loteFiltro) datosFiltrados = datosFiltrados.filter(a => a.lote === loteFiltro);
+      if (clasifFiltro) datosFiltrados = datosFiltrados.filter(a => a.clasificacion === clasifFiltro);
+      const tbodyDetalle = document.getElementById('tbodyDetalle');
+      tbodyDetalle.innerHTML = '';
+      datosFiltrados.forEach(animal => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${animal.id}</td>
+          <td>${animal.numeroPractico}</td>
+          <td>${animal.lote}</td>
+          <td>${animal.clasificacion}</td>
+          <td>${animal.pesoActual.toLocaleString('es-VE', {maximumFractionDigits: 1})}</td>
+          <td class="${animal.gananciaDiaria < 0 ? 'negativo' : 'positivo'}">
+            ${animal.gananciaDiaria !== null ? animal.gananciaDiaria.toFixed(2) : 'N/A'}
+          </td>
+          <td>${animal.fechaUltimoPesaje}</td>
+        `;
+        tbodyDetalle.appendChild(tr);
+      });
+    }
+    
+    function cambiarTab(tabId) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+    }
+    
+    function mostrarLoader(mostrar) {
+      document.getElementById('loader').style.display = mostrar ? 'block' : 'none';
+    }
+    
+    function recargarDatos() { cargarDatos(); }
+    function imprimir() { window.print(); }
+    function cerrar() { window.close(); if (window.opener) { window.opener.focus(); } }
+  </script>
+</body>
+</html>
