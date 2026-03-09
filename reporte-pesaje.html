@@ -14,7 +14,7 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: system-ui, -apple-system, sans-serif; background: var(--fondo); color: #333; line-height: 1.5; }
-    .container { max-width: 1200px; margin: auto; padding: 15px; }
+    .container { max-width: 1400px; margin: auto; padding: 15px; }
     
     .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; margin-bottom: 20px; border-bottom: 2px solid var(--verde); }
     .header h1 { color: var(--verde); font-size: 22px; }
@@ -137,7 +137,7 @@
       
       <div id="tab-general" class="tab-content active">
         <div class="card">
-          <div class="card-title">📈 Evolución de Ganancia Diaria en el Tiempo</div>
+          <div class="card-title">📈 Evolución de Ganancia Diaria en el Tiempo (Todos los Pesajes)</div>
           <div class="chart-container">
             <canvas id="chartEvolucion"></canvas>
           </div>
@@ -164,7 +164,7 @@
           </div>
         </div>
         <div class="card">
-          <div class="card-title">📊 Evolución por Lote</div>
+          <div class="card-title">📊 Evolución por Lote (Todos los Pesajes)</div>
           <div class="chart-container">
             <canvas id="chartPorLote"></canvas>
           </div>
@@ -195,7 +195,7 @@
             <table id="tablaDesmejorados">
               <thead>
                 <tr>
-                  <th>N° Práctico</th><th>Lote</th><th>Clasificación</th>
+                  <th>ID</th><th>N° Práctico</th><th>Lote</th><th>Clasificación</th>
                   <th>Ganancia Anterior</th><th>Ganancia Actual</th><th>Variación</th>
                   <th>Peso Actual</th><th>Último Pesaje</th>
                 </tr>
@@ -294,7 +294,7 @@
       const metaCumplidaPorcentaje = animalesConGanancia.length > 0 ? (metaCumplidaCount / animalesConGanancia.length) * 100 : 0;
       
       document.getElementById('kpiGananciaGeneral').textContent = gananciaDiariaPromedio.toFixed(2);
-      document.getElementById('kpiKilosTotales').textContent = kilosTotales.toLocaleString('es-VE', {maximumFractionDigits: 1});
+      document.getElementById('kpiKilosTotales').textContent = Math.round(kilosTotales).toLocaleString('es-VE');
       document.getElementById('kpiTotalAnimales').textContent = animalesFiltrados.length;
       document.getElementById('kpiDesmejorados').textContent = desmejoradosFiltrados.length;
       document.getElementById('kpiMetaCumplida').textContent = metaCumplidaCount;
@@ -324,6 +324,7 @@
         };
       });
       
+      // ✅ EVOLUCIÓN TEMPORAL CON TODOS LOS PESAJES
       const evolucionMensual = {};
       animalesFiltrados.forEach(animal => {
         if (animal.fechaUltimoPesaje) {
@@ -448,7 +449,7 @@
       tbodyDesm.innerHTML = '';
       desmejorados.forEach(animal => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${animal.numeroPractico}</td><td>${animal.lote}</td><td>${animal.clasificacion}</td><td class="positivo">${animal.gananciaDiariaAnterior.toFixed(2)}</td><td class="${animal.gananciaDiariaActual < 0 ? 'negativo' : 'positivo'}">${animal.gananciaDiariaActual.toFixed(2)}</td><td class="negativo">${animal.variacion.toFixed(2)}</td><td>${animal.pesoActual.toLocaleString('es-VE')}</td><td>${animal.fechaUltimoPesaje}</td>`;
+        tr.innerHTML = `<td>${animal.id}</td><td>${animal.numeroPractico}</td><td>${animal.lote}</td><td>${animal.clasificacion}</td><td class="positivo">${animal.gananciaDiariaAnterior.toFixed(2)}</td><td class="${animal.gananciaDiariaActual < 0 ? 'negativo' : 'positivo'}">${animal.gananciaDiariaActual.toFixed(2)}</td><td class="negativo">${animal.variacion.toFixed(2)}</td><td>${animal.pesoActual.toLocaleString('es-VE')}</td><td>${animal.fechaUltimoPesaje}</td>`;
         tbodyDesm.appendChild(tr);
       });
       
