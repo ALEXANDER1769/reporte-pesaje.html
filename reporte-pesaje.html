@@ -324,7 +324,6 @@
         };
       });
       
-      // ✅ EVOLUCIÓN TEMPORAL CON TODOS LOS PESAJES
       const evolucionMensual = {};
       animalesFiltrados.forEach(animal => {
         if (animal.fechaUltimoPesaje) {
@@ -361,7 +360,6 @@
     }
     
     function renderizarGraficos(datosEvolucion, distribucion, kpisPorLote) {
-      // ✅ GRÁFICO DE EVOLUCIÓN - COLORES CONTRASTANTES
       const ctxEvol = document.getElementById('chartEvolucion').getContext('2d');
       if (chartEvolucion) chartEvolucion.destroy();
       
@@ -377,16 +375,39 @@
             borderWidth: 3,
             fill: true,
             tension: 0.3,
-            pointRadius: 5,
+            pointRadius: 6,
             pointBackgroundColor: '#e74c3c',
             pointBorderColor: '#fff',
             pointBorderWidth: 2
           }]
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { beginAtZero: false, grid: { color: '#e0e0e0' } }, x: { grid: { color: '#e0e0e0' } } } }
+        options: { 
+          responsive: true, 
+          maintainAspectRatio: false, 
+          plugins: { 
+            legend: { display: true, position: 'top' },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return 'Ganancia: ' + context.parsed.y.toFixed(2) + ' kg/día';
+                }
+              }
+            }
+          }, 
+          scales: { 
+            y: { 
+              beginAtZero: false, 
+              grid: { color: '#e0e0e0' },
+              title: { display: true, text: 'Ganancia Diaria (kg/día)' }
+            }, 
+            x: { 
+              grid: { color: '#e0e0e0' },
+              title: { display: true, text: 'Mes' }
+            } 
+          } 
+        }
       });
       
-      // ✅ GRÁFICO DE DISTRIBUCIÓN - COLORES VIBRANTES
       const ctxDist = document.getElementById('chartDistribucion').getContext('2d');
       if (chartDistribucion) chartDistribucion.destroy();
       
@@ -404,7 +425,6 @@
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
       });
       
-      // ✅ GRÁFICO POR LOTE - COLORES DIFERENCIADOS
       const ctxLote = document.getElementById('chartPorLote').getContext('2d');
       if (chartPorLote) chartPorLote.destroy();
       
@@ -423,7 +443,15 @@
             labels: ['Ganancia Diaria (kg/día)'],
             datasets: datasetsLote
           },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, grid: { color: '#e0e0e0' } }, x: { grid: { display: false } } } }
+          options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { legend: { position: 'top' } }, 
+            scales: { 
+              y: { beginAtZero: true, grid: { color: '#e0e0e0' } }, 
+              x: { grid: { display: false } } 
+            } 
+          }
         });
       }
     }
