@@ -237,7 +237,6 @@
     // === CARGAR DATOS DEL WORKER ===
     async function cargarDatos() {
       mostrarLoader(true);
-      
       try {
         const response = await fetch(WORKER_URL, {
           method: 'POST',
@@ -248,20 +247,15 @@
             token: 'pysiga-node'
           })
         });
-        
         const data = await response.json();
-        
         if (!data.ok) throw new Error(data.error || 'Error al cargar datos');
-        
         datosGlobales = data;
         renderizarKPIs();
         renderizarGraficos();
         renderizarTablas();
         poblarFiltros();
-        
         mostrarLoader(false);
         document.getElementById('contenido').style.display = 'block';
-        
       } catch (error) {
         console.error('Error:', error);
         alert('❌ Error: ' + error.message);
@@ -283,15 +277,15 @@
       // Gráfico de Evolución General
       const ctxEvol = document.getElementById('chartEvolucion').getContext('2d');
       if (chartEvolucion) chartEvolucion.destroy();
-      
       const datosEvol = datosGlobales.graficos.evolucionGananciaGeneral;
+      
       chartEvolucion = new Chart(ctxEvol, {
         type: 'line',
-         {  // ✅ CORREGIDO: Agregada clave ""
+        data: {
           labels: datosEvol.map(d => d.mes),
           datasets: [{
             label: 'Ganancia Diaria Promedio (kg/día)',
-             datosEvol.map(d => d.gananciaDiariaPromedio),  // ✅ CORREGIDO: Agregada clave ""
+            data: datosEvol.map(d => d.gananciaDiariaPromedio),
             borderColor: '#2f6f4e',
             backgroundColor: 'rgba(47, 111, 78, 0.1)',
             fill: true,
@@ -304,14 +298,14 @@
       // Gráfico de Distribución
       const ctxDist = document.getElementById('chartDistribucion').getContext('2d');
       if (chartDistribucion) chartDistribucion.destroy();
-      
       const distribucion = datosGlobales.graficos.distribucionGananciaDiaria;
+      
       chartDistribucion = new Chart(ctxDist, {
         type: 'doughnut',
-         {  // ✅ CORREGIDO: Agregada clave "data:"
+        data: {
           labels: Object.keys(distribucion),
           datasets: [{
-             Object.values(distribucion),  // ✅ CORREGIDO: Agregada clave ""
+            data: Object.values(distribucion),
             backgroundColor: ['#e74c3c', '#f39c12', '#f1c40f', '#2ecc71', '#27ae60', '#2f6f4e']
           }]
         },
@@ -321,11 +315,11 @@
       // Gráfico por Lote
       const ctxLote = document.getElementById('chartPorLote').getContext('2d');
       if (chartPorLote) chartPorLote.destroy();
-      
       const evolucionLotes = datosGlobales.graficos.evolucionPorLote;
+      
       const datasetsLote = Object.entries(evolucionLotes).map(([lote, datos], i) => ({
         label: lote,
-        data: datos.map(d => d.gananciaDiariaPromedio),  // ✅ CORREGIDO: Agregada clave ""
+        data: datos.map(d => d.gananciaDiariaPromedio),
         borderColor: ['#2c4f7c', '#8b6f47', '#9b59b6', '#e74c3c', '#7f8c8d'][i % 5],
         fill: false,
         tension: 0.2
@@ -334,7 +328,7 @@
       if (datasetsLote.length > 0) {
         chartPorLote = new Chart(ctxLote, {
           type: 'line',
-          data: {  // ✅ CORREGIDO: Agregada clave ""
+          data: {
             labels: datasetsLote[0].data.map((_, i) => evolucionLotes[Object.keys(evolucionLotes)[0]][i]?.fecha || ''),
             datasets: datasetsLote
           },
@@ -345,74 +339,35 @@
     
     // === RENDERIZAR TABLAS ===
     function renderizarTablas() {
-      // Tabla por Lote
       const tbodyLotes = document.getElementById('tbodyLotes');
       tbodyLotes.innerHTML = '';
       Object.entries(datosGlobales.kpis.porLote).forEach(([lote, kpi]) => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><strong>${lote}</strong></td>
-          <td>${kpi.totalAnimales}</td>
-          <td>${kpi.kilosTotales.toLocaleString('es-VE', {maximumFractionDigits: 1})}</td>
-          <td class="${kpi.gananciaDiariaPromedio < 0 ? 'negativo' : 'positivo'}">
-            ${kpi.gananciaDiariaPromedio !== null ? kpi.gananciaDiariaPromedio.toFixed(2) : 'N/A'}
-          </td>
-        `;
+        tr.innerHTML = `<td><strong>${lote}</strong></td><td>${kpi.totalAnimales}</td><td>${kpi.kilosTotales.toLocaleString('es-VE', {maximumFractionDigits: 1})}</td><td class="${kpi.gananciaDiariaPromedio < 0 ? 'negativo' : 'positivo'}">${kpi.gananciaDiariaPromedio !== null ? kpi.gananciaDiariaPromedio.toFixed(2) : 'N/A'}</td>`;
         tbodyLotes.appendChild(tr);
       });
       
-      // Tabla por Clasificación
       const tbodyClasif = document.getElementById('tbodyClasif');
       tbodyClasif.innerHTML = '';
       Object.entries(datosGlobales.kpis.porClasificacion).forEach(([clasif, kpi]) => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><strong>${clasif}</strong></td>
-          <td>${kpi.totalAnimales}</td>
-          <td>${kpi.kilosTotales.toLocaleString('es-VE', {maximumFractionDigits: 1})}</td>
-          <td class="${kpi.gananciaDiariaPromedio < 0 ? 'negativo' : 'positivo'}">
-            ${kpi.gananciaDiariaPromedio !== null ? kpi.gananciaDiariaPromedio.toFixed(2) : 'N/A'}
-          </td>
-        `;
+        tr.innerHTML = `<td><strong>${clasif}</strong></td><td>${kpi.totalAnimales}</td><td>${kpi.kilosTotales.toLocaleString('es-VE', {maximumFractionDigits: 1})}</td><td class="${kpi.gananciaDiariaPromedio < 0 ? 'negativo' : 'positivo'}">${kpi.gananciaDiariaPromedio !== null ? kpi.gananciaDiariaPromedio.toFixed(2) : 'N/A'}</td>`;
         tbodyClasif.appendChild(tr);
       });
       
-      // Tabla Animales Desmejorados
       const tbodyDesm = document.getElementById('tbodyDesmejorados');
       tbodyDesm.innerHTML = '';
       datosGlobales.listados.animalesDesmejorados.forEach(animal => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${animal.numeroPractico}</td>
-          <td>${animal.lote}</td>
-          <td>${animal.clasificacion}</td>
-          <td class="positivo">${animal.gananciaDiariaAnterior.toFixed(2)}</td>
-          <td class="${animal.gananciaDiariaActual < 0 ? 'negativo' : animal.gananciaDiariaActual < animal.gananciaDiariaAnterior ? 'negativo' : 'positivo'}">
-            ${animal.gananciaDiariaActual.toFixed(2)}
-          </td>
-          <td class="negativo">${animal.variacion.toFixed(2)}</td>
-          <td>${animal.pesoActual.toLocaleString('es-VE')}</td>
-          <td>${animal.fechaUltimoPesaje}</td>
-        `;
+        tr.innerHTML = `<td>${animal.numeroPractico}</td><td>${animal.lote}</td><td>${animal.clasificacion}</td><td class="positivo">${animal.gananciaDiariaAnterior.toFixed(2)}</td><td class="${animal.gananciaDiariaActual < 0 ? 'negativo' : 'positivo'}">${animal.gananciaDiariaActual.toFixed(2)}</td><td class="negativo">${animal.variacion.toFixed(2)}</td><td>${animal.pesoActual.toLocaleString('es-VE')}</td><td>${animal.fechaUltimoPesaje}</td>`;
         tbodyDesm.appendChild(tr);
       });
       
-      // Tabla Detalle Completo
       const tbodyDetalle = document.getElementById('tbodyDetalle');
       tbodyDetalle.innerHTML = '';
       datosGlobales.listados.animalesConDatos.forEach(animal => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${animal.id}</td>
-          <td>${animal.numeroPractico}</td>
-          <td>${animal.lote}</td>
-          <td>${animal.clasificacion}</td>
-          <td>${animal.pesoActual.toLocaleString('es-VE', {maximumFractionDigits: 1})}</td>
-          <td class="${animal.gananciaDiaria < 0 ? 'negativo' : 'positivo'}">
-            ${animal.gananciaDiaria !== null ? animal.gananciaDiaria.toFixed(2) : 'N/A'}
-          </td>
-          <td>${animal.fechaUltimoPesaje}</td>
-        `;
+        tr.innerHTML = `<td>${animal.id}</td><td>${animal.numeroPractico}</td><td>${animal.lote}</td><td>${animal.clasificacion}</td><td>${animal.pesoActual.toLocaleString('es-VE', {maximumFractionDigits: 1})}</td><td class="${animal.gananciaDiaria < 0 ? 'negativo' : 'positivo'}">${animal.gananciaDiaria !== null ? animal.gananciaDiaria.toFixed(2) : 'N/A'}</td><td>${animal.fechaUltimoPesaje}</td>`;
         tbodyDetalle.appendChild(tr);
       });
     }
@@ -421,20 +376,16 @@
     function poblarFiltros() {
       const filtroLote = document.getElementById('filtroLote');
       const filtroClasif = document.getElementById('filtroClasif');
-      
       const lotes = [...new Set(datosGlobales.listados.animalesConDatos.map(a => a.lote))].sort();
       lotes.forEach(lote => {
         const opt = document.createElement('option');
-        opt.value = lote;
-        opt.textContent = lote;
+        opt.value = lote; opt.textContent = lote;
         filtroLote.appendChild(opt);
       });
-      
       const clasifs = [...new Set(datosGlobales.listados.animalesConDatos.map(a => a.clasificacion).filter(c => c && c.toString().trim() !== ""))].sort();
       clasifs.forEach(clasif => {
         const opt = document.createElement('option');
-        opt.value = clasif;
-        opt.textContent = clasif;
+        opt.value = clasif; opt.textContent = clasif;
         filtroClasif.appendChild(opt);
       });
     }
@@ -443,26 +394,14 @@
     function aplicarFiltros() {
       const loteFiltro = document.getElementById('filtroLote').value;
       const clasifFiltro = document.getElementById('filtroClasif').value;
-      
       let datosFiltrados = [...datosGlobales.listados.animalesConDatos];
       if (loteFiltro) datosFiltrados = datosFiltrados.filter(a => a.lote === loteFiltro);
       if (clasifFiltro) datosFiltrados = datosFiltrados.filter(a => a.clasificacion === clasifFiltro);
-      
       const tbodyDetalle = document.getElementById('tbodyDetalle');
       tbodyDetalle.innerHTML = '';
       datosFiltrados.forEach(animal => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${animal.id}</td>
-          <td>${animal.numeroPractico}</td>
-          <td>${animal.lote}</td>
-          <td>${animal.clasificacion}</td>
-          <td>${animal.pesoActual.toLocaleString('es-VE', {maximumFractionDigits: 1})}</td>
-          <td class="${animal.gananciaDiaria < 0 ? 'negativo' : 'positivo'}">
-            ${animal.gananciaDiaria !== null ? animal.gananciaDiaria.toFixed(2) : 'N/A'}
-          </td>
-          <td>${animal.fechaUltimoPesaje}</td>
-        `;
+        tr.innerHTML = `<td>${animal.id}</td><td>${animal.numeroPractico}</td><td>${animal.lote}</td><td>${animal.clasificacion}</td><td>${animal.pesoActual.toLocaleString('es-VE', {maximumFractionDigits: 1})}</td><td class="${animal.gananciaDiaria < 0 ? 'negativo' : 'positivo'}">${animal.gananciaDiaria !== null ? animal.gananciaDiaria.toFixed(2) : 'N/A'}</td><td>${animal.fechaUltimoPesaje}</td>`;
         tbodyDetalle.appendChild(tr);
       });
     }
@@ -474,14 +413,10 @@
       event.target.classList.add('active');
       document.getElementById(`tab-${tabId}`).classList.add('active');
     }
-    
-    function mostrarLoader(mostrar) {
-      document.getElementById('loader').style.display = mostrar ? 'block' : 'none';
-    }
-    
+    function mostrarLoader(mostrar) { document.getElementById('loader').style.display = mostrar ? 'block' : 'none'; }
     function recargarDatos() { cargarDatos(); }
     function imprimir() { window.print(); }
-    function cerrar() { window.close(); if (window.opener) { window.opener.focus(); } }
+    function cerrar() { window.close(); if (window.opener) window.opener.focus(); }
   </script>
 </body>
 </html>
