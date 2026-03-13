@@ -64,10 +64,12 @@ tr:hover { background: #f9f9f9; }
       <button class="btn btn-danger" onclick="cerrar()">🚪 Cerrar</button>
     </div>
   </div>
+  
   <div id="loader" class="card loader">
     <div class="vaca">🐄</div>
     <div>Cargando datos de pesaje y calculando KPIs…</div>
   </div>
+  
   <div id="contenido" style="display: none;">
     <div class="card">
       <div class="filters">
@@ -84,6 +86,7 @@ tr:hover { background: #f9f9f9; }
         <button class="btn btn-primary" onclick="recargarDatos()">🔄 Actualizar</button>
       </div>
     </div>
+    
     <div class="card">
       <div class="card-title">📊 Indicadores Clave (KPIs)</div>
       <div class="kpi-grid">
@@ -114,6 +117,7 @@ tr:hover { background: #f9f9f9; }
         </div>
       </div>
     </div>
+    
     <div class="tabs">
       <button class="tab active" onclick="cambiarTab('general')">📈 Evolución General</button>
       <button class="tab" onclick="cambiarTab('lotes')">📦 Por Lote</button>
@@ -121,6 +125,7 @@ tr:hover { background: #f9f9f9; }
       <button class="tab" onclick="cambiarTab('desmejorados')">⚠️ Animales Desmejorados</button>
       <button class="tab" onclick="cambiarTab('detalle')">📋 Detalle Completo</button>
     </div>
+    
     <div id="tab-general" class="tab-content active">
       <div class="card">
         <div class="card-title">📈 Evolución de Ganancia Diaria en el Tiempo (Todos los Pesajes)</div>
@@ -135,6 +140,7 @@ tr:hover { background: #f9f9f9; }
         </div>
       </div>
     </div>
+    
     <div id="tab-lotes" class="tab-content">
       <div class="card">
         <div class="card-title">📦 KPIs por Lote</div>
@@ -155,6 +161,7 @@ tr:hover { background: #f9f9f9; }
         </div>
       </div>
     </div>
+    
     <div id="tab-clasificacion" class="tab-content">
       <div class="card">
         <div class="card-title">🏷️ KPIs por Clasificación de Animal</div>
@@ -168,6 +175,7 @@ tr:hover { background: #f9f9f9; }
         </div>
       </div>
     </div>
+    
     <div id="tab-desmejorados" class="tab-content">
       <div class="card">
         <div class="card-title">⚠️ Animales que Redujeron su Ganancia Diaria</div>
@@ -188,6 +196,7 @@ tr:hover { background: #f9f9f9; }
         </div>
       </div>
     </div>
+    
     <div id="tab-detalle" class="tab-content">
       <div class="card">
         <div class="card-title">📋 Detalle de Todos los Animales con Pesaje</div>
@@ -206,6 +215,7 @@ tr:hover { background: #f9f9f9; }
     </div>
   </div>
 </div>
+
 <script>
 const WORKER_URL = "https://pysiga.d-alexjose.workers.dev";
 const email = new URLSearchParams(window.location.search).get('email');
@@ -301,7 +311,6 @@ function aplicarFiltros() {
     };
   });
 
-  // ✅ USAR DATOS DE EVOLUCIÓN DEL BACKEND (CON TODAS LAS FECHAS)
   const datosGraficoEvolucion = datosGlobales.graficos.evolucionGananciaGeneral;
 
   const distribucion = { "Negativa": 0, "0 a 0.5 kg/día": 0, "0.5 a 1 kg/día": 0, "1 a 1.5 kg/día": 0, "1.5 a 2 kg/día": 0, "Más de 2 kg/día": 0 };
@@ -320,7 +329,6 @@ function aplicarFiltros() {
 }
 
 function renderizarGraficos(datosEvolucion, distribucion, kpisPorLote) {
-  // ✅ GRÁFICO DE EVOLUCIÓN - CON TODAS LAS FECHAS ESPECÍFICAS
   const ctxEvol = document.getElementById('chartEvolucion').getContext('2d');
   if (chartEvolucion) chartEvolucion.destroy();
   chartEvolucion = new Chart(ctxEvol, {
@@ -355,28 +363,20 @@ function renderizarGraficos(datosEvolucion, distribucion, kpisPorLote) {
         }
       },
       scales: {
-        y: {
-          beginAtZero: false,
-          grid: { color: '#e0e0e0' },
-          title: { display: true, text: 'Ganancia Diaria (kg/día)' }
-        },
-        x: {
-          grid: { color: '#e0e0e0' },
-          title: { display: true, text: 'Fecha de Pesaje' }
-        }
+        y: { beginAtZero: false, grid: { color: '#e0e0e0' }, title: { display: true, text: 'Ganancia Diaria (kg/día)' } },
+        x: { grid: { color: '#e0e0e0' }, title: { display: true, text: 'Fecha de Pesaje' } }
       }
     }
   });
 
-  // ✅ GRÁFICO DE DISTRIBUCIÓN
   const ctxDist = document.getElementById('chartDistribucion').getContext('2d');
   if (chartDistribucion) chartDistribucion.destroy();
   chartDistribucion = new Chart(ctxDist, {
     type: 'doughnut',
-     {
+    data: {
       labels: Object.keys(distribucion),
       datasets: [{
-         Object.values(distribucion),
+        data: Object.values(distribucion),
         backgroundColor: ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#1abc9c', '#9b59b6'],
         borderWidth: 2,
         borderColor: '#fff'
@@ -385,12 +385,11 @@ function renderizarGraficos(datosEvolucion, distribucion, kpisPorLote) {
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
   });
 
-  // ✅ GRÁFICO POR LOTE
   const ctxLote = document.getElementById('chartPorLote').getContext('2d');
   if (chartPorLote) chartPorLote.destroy();
   const datasetsLote = Object.entries(kpisPorLote).map(([lote, kpi], i) => ({
     label: lote,
-    data: [kpi.gananciaDiariaPromedio !== null ? kpi.gananciaDiariaPromedio : 0],
+     [kpi.gananciaDiariaPromedio !== null ? kpi.gananciaDiariaPromedio : 0],
     backgroundColor: ['#2c4f7c', '#e67e22', '#9b59b6', '#e74c3c', '#1abc9c', '#f39c12'][i % 6],
     borderColor: '#fff',
     borderWidth: 2
