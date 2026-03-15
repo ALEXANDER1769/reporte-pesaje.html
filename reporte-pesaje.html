@@ -42,7 +42,7 @@
     .table-container { overflow-x: auto; margin-top: 10px; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th { background: var(--verde); color: white; padding: 10px 8px; text-align: left; position: sticky; top: 0; }
-    td { padding: 8px; border-bottom: 1px solid var(--borde); }
+    8px; border-bottom: 1px solid var(--borde); }
     tr:hover { background: #f9f9f9; }
     .negativo { color: var(--rojo); font-weight: 600; }
     .positivo { color: var(--verde); font-weight: 600; }
@@ -280,10 +280,8 @@
         
         datosGlobales = data;
         
-        // ✅ Compatibilidad: usar listados.animalesConDatos o fallback a raíz
-        const animalesConDatos = getData(data, 'listados.animalesConDatos') || 
-                                getData(data, 'animalesConDatos') || 
-                                [];
+        // ✅ Corrección: usar 'animales' en lugar de 'animalesConDatos'
+        const animalesConDatos = getData(data, 'animales') || [];
         const animalesDesmejorados = getData(data, 'listados.animalesDesmejorados') || 
                                     getData(data, 'animalesDesmejorados') || 
                                     [];
@@ -315,9 +313,8 @@
       const clasifFiltro = document.getElementById('filtroClasif').value;
       const metaGanancia = parseFloat(document.getElementById('metaGanancia').value) || 0;
       
-      // ✅ Acceso seguro a los datos
-      const animalesBase = getData(datosGlobales, 'listados.animalesConDatos') || 
-                          getData(datosGlobales, 'animalesConDatos') || [];
+      // ✅ Corrección: usar 'animales' en lugar de 'animalesConDatos'
+      const animalesBase = getData(datosGlobales, 'animales') || [];
       const desmejoradosBase = getData(datosGlobales, 'listados.animalesDesmejorados') || 
                               getData(datosGlobales, 'animalesDesmejorados') || [];
       
@@ -399,7 +396,7 @@
           const mesKey = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
           if (!evolucionMensual[mesKey]) evolucionMensual[mesKey] = { gananciaAcumulada: 0, conteo: 0 };
           if (animal.gananciaDiaria !== null) {
-            evolucionMensual[mesKey].gananciaAcumulananciaDiaria;
+            evolucionMensual[mesKey].gananciaAcumulada += animal.gananciaDiaria;
             evolucionMensual[mesKey].conteo++;
           }
         }
@@ -613,9 +610,8 @@
       const filtroLote = document.getElementById('filtroLote');
       const filtroClasif = document.getElementById('filtroClasif');
       
-      // ✅ Acceso seguro con fallback
-      const animalesBase = getData(datosGlobales, 'listados.animalesConDatos') || 
-                          getData(datosGlobales, 'animalesConDatos') || [];
+      // ✅ Corrección: usar 'animales' en lugar de 'animalesConDatos'
+      const animalesBase = getData(datosGlobales, 'animales') || [];
       
       const lotes = [...new Set(animalesBase.map(a => a.lote))].sort();
       lotes.forEach(lote => {
