@@ -29,7 +29,7 @@
     
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
     .kpi-card { background: var(--verde-claro); padding: 15px; border-radius: 8px; text-align: center; border-left: 4px solid var(--verde); }
-    .kpi-value { font-size: 24px; font-weight: 700; color: var(--verde); margin: 5px 0; }
+    .k-size: 24px; font-weight: 700; color: var(--verde); margin: 5px 0; }
     .kpi-label { font-size: 13px; color: var(--gris); }
     .kpi-unit { font-size: 12px; color: var(--gris); }
     
@@ -303,7 +303,7 @@
         aplicarFiltros();
         
         mostrarLoader(false);
-        document.getElementById('contenido').style.display = 'block';
+       ').style.display = 'block';
         
       } catch (error) {
         console.error('❌ Error en cargarDatos:', error);
@@ -438,11 +438,11 @@
       
       chartEvolucion = new Chart(ctxEvol, {
         type: 'line',
-         {
+        data: { // ✅ Corregido: añadido "data:"
           labels: datosEvolucion.map(d => d.fecha || d.mes),
           datasets: [{
             label: 'Ganancia Diaria Promedio (kg/día)',
-             datosEvolucion.map(d => d.gananciaDiariaPromedio),
+            data: datosEvolucion.map(d => d.gananciaDiariaPromedio), // ✅ Corregido: añadido "data:"
             borderColor: '#e74c3c',
             backgroundColor: 'rgba(231, 76, 60, 0.2)',
             borderWidth: 3,
@@ -480,10 +480,10 @@
       
       chartDistribucion = new Chart(ctxDist, {
         type: 'doughnut',
-        data: {
+        data: { // ✅ Corregido: añadido "data:"
           labels: Object.keys(distribucion),
           datasets: [{
-             Object.values(distribucion),
+            data: Object.values(distribucion), // ✅ Corregido: añadido "data:"
             backgroundColor: ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#1abc9c', '#9b59b6'],
             borderWidth: 2,
             borderColor: '#fff'
@@ -518,7 +518,7 @@
         
         const datasetsLote = lotes.map((lote, i) => ({
           label: lote,
-           fechas.map(f => {
+          data: fechas.map(f => {
             const dato = evolucionPorLoteBackend[lote].find(d => d.fecha === f);
             return dato?.gananciaDiariaPromedio ?? null;
           }),
@@ -532,7 +532,7 @@
         
         chartPorLote = new Chart(ctxLote, {
           type: 'line',
-           {
+          data: { // ✅ Corregido: añadido "data:"
             labels: fechas,
             datasets: datasetsLote
           },
@@ -550,7 +550,7 @@
         // Fallback: gráfico de barras con KPIs actuales por lote
         const datasetsLote = Object.entries(kpisPorLote).map(([lote, kpi], i) => ({
           label: lote,
-           [kpi.gananciaDiariaPromedio !== null ? kpi.gananciaDiariaPromedio : 0],
+          data: [kpi.gananciaDiariaPromedio !== null ? kpi.gananciaDiariaPromedio : 0],
           backgroundColor: ['#2c4f7c', '#e67e22', '#9b59b6', '#e74c3c', '#1abc9c', '#f39c12'][i % 6],
           borderColor: '#fff',
           borderWidth: 2
@@ -559,7 +559,7 @@
         if (datasetsLote.length > 0) {
           chartPorLote = new Chart(ctxLote, {
             type: 'bar',
-             {
+            data: { // ✅ Corregido: añadido "data:"
               labels: ['Ganancia Diaria (kg/día)'],
               datasets: datasetsLote
             },
