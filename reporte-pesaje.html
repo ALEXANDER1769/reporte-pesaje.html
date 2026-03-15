@@ -240,7 +240,7 @@
     let datosGlobales = null;
     let chartEvolucion = null, chartDistribucion = null, chartPorLote = null;
     
-    // ✅ HELPER: Acceso seguro con validación explícita
+    // ✅ HELPER: Acceso seguro a arrays anidados
     function getSafeArray(obj, path) {
       try {
         const parts = path.split('.');
@@ -295,17 +295,14 @@
           throw new Error(data?.error || 'Respuesta inválida del servidor');
         }
         
-        // ✅ ASIGNAR DATOS GLOBALES
         datosGlobales = data;
         
-        // ✅ VALIDAR ESTRUCTURA ANTES DE CONTINUAR
         const animalesBase = getSafeArray(datosGlobales, 'listados.animalesConDatos');
         
         if (animalesBase.length === 0 && !datosGlobales?.kpis?.general?.totalAnimalesPesados) {
           console.warn('⚠️ No hay datos de animales para mostrar');
         }
         
-        // ✅ EJECUTAR FUNCIONES EN ORDEN SEGURO
         poblarFiltros(animalesBase);
         aplicarFiltros();
         
@@ -317,7 +314,6 @@
         alert('❌ Error: ' + error.message);
         mostrarLoader(false);
         
-        // Mostrar error en UI
         const contenido = document.getElementById('contenido');
         if (contenido) {
           contenido.innerHTML = `
@@ -346,25 +342,21 @@
       const clasifFiltro = document.getElementById('filtroClasif')?.value || '';
       const metaGanancia = parseFloat(document.getElementById('metaGanancia')?.value) || 0;
       
-      // ✅ ACCESO SEGURO A ARRAYS
       const animalesBase = getSafeArray(datosGlobales, 'listados.animalesConDatos');
       const desmejoradosBase = getSafeArray(datosGlobales, 'listados.animalesDesmejorados');
       
-      // Filtrar animales
       let animalesFiltrados = animalesBase.filter(a => {
         if (loteFiltro && a?.lote !== loteFiltro) return false;
         if (clasifFiltro && a?.clasificacion !== clasifFiltro) return false;
         return true;
       });
       
-      // Filtrar desmejorados
       let desmejoradosFiltrados = desmejoradosBase.filter(a => {
         if (loteFiltro && a?.lote !== loteFiltro) return false;
         if (clasifFiltro && a?.clasificacion !== clasifFiltro) return false;
         return true;
       });
       
-      // Calcular KPIs
       const animalesConGanancia = animalesFiltrados.filter(a => a?.gananciaDiaria !== null && a?.gananciaDiaria !== undefined);
       const gananciaDiariaPromedio = animalesConGanancia.length > 0
         ? animalesConGanancia.reduce((sum, a) => sum + a.gananciaDiaria, 0) / animalesConGanancia.length
@@ -377,7 +369,6 @@
         ? (metaCumplidaCount / animalesConGanancia.length) * 100 
         : 0;
       
-      // Actualizar UI con validación de elementos
       const setKPI = (id, valor) => {
         const el = document.getElementById(id);
         if (el) el.textContent = valor;
@@ -390,7 +381,6 @@
       setKPI('kpiMetaCumplida', metaCumplidaCount);
       setKPI('kpiMetaPorcentaje', `${metaCumplidaPorcentaje.toFixed(1)}% del total${metaGanancia > 0 ? ` (meta: ${metaGanancia} kg/día)` : ''}`);
       
-      // KPIs por lote
       const kpisPorLote = {};
       const lotes = [...new Set(animalesFiltrados.map(a => a?.lote).filter(l => l))];
       lotes.forEach(lote => {
@@ -405,7 +395,6 @@
         };
       });
       
-      // KPIs por clasificación
       const kpisPorClasif = {};
       const clasifs = [...new Set(animalesFiltrados.map(a => a?.clasificacion).filter(c => c && String(c).trim() !== ""))];
       clasifs.forEach(clasif => {
@@ -420,7 +409,6 @@
         };
       });
       
-      // Gráficos: usar datos del backend o fallback local
       const graficosBackend = datosGlobales?.graficos || {};
       const evolucionBackend = Array.isArray(graficosBackend.evolucionGananciaGeneral) 
         ? graficosBackend.evolucionGananciaGeneral 
@@ -471,7 +459,7 @@
     }
     
     function renderizarGraficos(datosEvolucion, distribucion, kpisPorLote, evolucionPorLoteBackend) {
-      // Gráfico de evolución
+      // ✅ GRÁFICO DE EVOLUCIÓN
       const ctxEvol = document.getElementById('chartEvolucion')?.getContext('2d');
       if (!ctxEvol) return;
       if (chartEvolucion) chartEvolucion.destroy();
@@ -514,7 +502,7 @@
         }
       });
       
-      // Gráfico de distribución
+      // ✅ GRÁFICO DE DISTRIBUCIÓN
       const ctxDist = document.getElementById('chartDistribucion')?.getContext('2d');
       if (!ctxDist) return;
       if (chartDistribucion) chartDistribucion.destroy();
@@ -548,7 +536,7 @@
         }
       });
       
-      // Gráfico por lote
+      // ✅ GRÁFICO POR LOTE
       const ctxLote = document.getElementById('chartPorLote')?.getContext('2d');
       if (!ctxLote) return;
       if (chartPorLote) chartPorLote.destroy();
@@ -604,7 +592,7 @@
         if (datasetsLote.length > 0) {
           chartPorLote = new Chart(ctxLote, {
             type: 'bar',
-            data: {
+             {
               labels: ['Ganancia Diaria (kg/día)'],
               datasets: datasetsLote
             },
@@ -623,7 +611,6 @@
     }
     
     function renderizarTablas(kpisPorLote, kpisPorClasif, desmejorados, animales, metaGanancia) {
-      // Tabla de lotes
       const tbodyLotes = document.getElementById('tbodyLotes');
       if (tbodyLotes) {
         tbodyLotes.innerHTML = '';
@@ -634,7 +621,6 @@
         });
       }
       
-      // Tabla de clasificación
       const tbodyClasif = document.getElementById('tbodyClasif');
       if (tbodyClasif) {
         tbodyClasif.innerHTML = '';
@@ -645,7 +631,6 @@
         });
       }
       
-      // Tabla de desmejorados
       const tbodyDesm = document.getElementById('tbodyDesmejorados');
       if (tbodyDesm) {
         tbodyDesm.innerHTML = '';
@@ -656,7 +641,6 @@
         });
       }
       
-      // Tabla de detalle
       const tbodyDetalle = document.getElementById('tbodyDetalle');
       if (tbodyDetalle) {
         tbodyDetalle.innerHTML = '';
@@ -669,9 +653,8 @@
       }
     }
     
-    // ✅ FUNCIÓN CRÍTICA CORREGIDA: poblarFiltros
+    // ✅ FUNCIÓN CRÍTICA: poblarFiltros
     function poblarFiltros(animalesBase) {
-      // Validación explícita de entrada
       if (!Array.isArray(animalesBase)) {
         console.error('❌ poblarFiltros: animalesBase no es un array');
         return;
@@ -685,11 +668,9 @@
         return;
       }
       
-      // Limpiar opciones previas
       filtroLote.innerHTML = '<option value="">Todos los lotes</option>';
       filtroClasif.innerHTML = '<option value="">Todas</option>';
       
-      // Extraer lotes únicos con validación
       const lotes = [...new Set(animalesBase
         .map(a => a?.lote)
         .filter(l => l !== null && l !== undefined && String(l).trim() !== "")
@@ -702,7 +683,6 @@
         filtroLote.appendChild(opt);
       });
       
-      // Extraer clasificaciones únicas con validación
       const clasifs = [...new Set(animalesBase
         .map(a => a?.clasificacion)
         .filter(c => c !== null && c !== undefined && String(c).trim() !== "")
