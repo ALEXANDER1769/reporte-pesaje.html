@@ -425,48 +425,132 @@
       return rangos;
     }
     
-    function renderizarGraficos(datosEvolucion, distribucion, kpisPorLote, evolucionPorLoteBackend) {
-      // ✅ GRÁFICO DE EVOLUCIÓN - COLORES CONTRASTANTES
-      const ctxEvol = document.getElementById('chartEvolucion').getContext('2d');
-      if (chartEvolucion) chartEvolucion.destroy();
-      
-      chartEvolucion = new Chart(ctxEvol, {
-        type: 'line',
-         {  // ✅ Corregido: añadido "data:"
-          labels: datosEvolucion.map(d => d.fecha || d.mes),
-          datasets: [{
-            label: 'Ganancia Diaria Promedio (kg/día)',
-             datosEvolucion.map(d => d.gananciaDiariaPromedio),  // ✅ Corregido: añadido "data:"
-            borderColor: '#e74c3c',
-            backgroundColor: 'rgba(231, 76, 60, 0.2)',
-            borderWidth: 3,
-            fill: true,
-            tension: 0.3,
-            pointRadius: 5,
-            pointBackgroundColor: '#e74c3c',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2
-          }]
-        },
-        options: { 
-          responsive: true, 
-          maintainAspectRatio: false, 
-          plugins: { 
-            legend: { display: true, position: 'top' },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  return `Ganancia: ${context.parsed.y} kg/día | Animales: ${context.raw?.animalesPesados || 'N/A'}`;
-                }
-              }
-            }
-          }, 
-          scales: { 
-            y: { beginAtZero: false, grid: { color: '#e0e0e0' }, title: { display: true, text: 'kg/día' } }, 
-            x: { grid: { color: '#e0e0e0' }, title: { display: true, text: 'Fecha' } } 
-          } 
-        }
-      });
+   function renderizarGraficos(datosEvolucion, distribucion, kpisPorLote, evolucionPorLoteBackend) {
+
+const ctxEvol = document.getElementById('chartEvolucion').getContext('2d');
+if(chartEvolucion) chartEvolucion.destroy();
+
+chartEvolucion = new Chart(ctxEvol,{
+type:'line',
+data:{
+labels: datosEvolucion.map(d=>d.fecha),
+datasets:[{
+label:'Ganancia Diaria Promedio (kg/día)',
+data: datosEvolucion.map(d=>d.gananciaDiariaPromedio),
+borderColor:'#e74c3c',
+backgroundColor:'rgba(231,76,60,0.2)',
+borderWidth:3,
+fill:true,
+tension:0.3,
+pointRadius:5
+}]
+},
+options:{
+responsive:true,
+maintainAspectRatio:false,
+plugins:{legend:{position:'top'}},
+scales:{
+y:{beginAtZero:false},
+x:{}
+}
+}
+});
+
+
+const ctxDist = document.getElementById('chartDistribucion').getContext('2d');
+if(chartDistribucion) chartDistribucion.destroy();
+
+chartDistribucion = new Chart(ctxDist,{
+type:'doughnut',
+data:{
+labels:Object.keys(distribucion),
+datasets:[{
+data:Object.values(distribucion),
+backgroundColor:[
+'#e74c3c',
+'#e67e22',
+'#f1c40f',
+'#2ecc71',
+'#1abc9c',
+'#9b59b6'
+],
+borderWidth:2
+}]
+},
+options:{
+responsive:true,
+maintainAspectRatio:false,
+plugins:{legend:{position:'right'}}
+}
+});
+
+
+const ctxLote = document.getElementById('chartPorLote').getContext('2d');
+if(chartPorLote) chartPorLote.destroy();
+
+if(evolucionPorLoteBackend && Object.keys(evolucionPorLoteBackend).length>0){
+
+const lotes = Object.keys(evolucionPorLoteBackend);
+
+const fechas=[...new Set(
+lotes.flatMap(l=>evolucionPorLoteBackend[l].map(d=>d.fecha))
+)].sort();
+
+const datasets = lotes.map((lote,i)=>({
+
+label:lote,
+
+data:fechas.map(f=>{
+const dato = evolucionPorLoteBackend[lote].find(d=>d.fecha===f);
+return dato?.gananciaDiariaPromedio ?? null;
+}),
+
+borderColor:[
+'#2c4f7c',
+'#e67e22',
+'#9b59b6',
+'#e74c3c',
+'#1abc9c',
+'#f39c12'
+][i%6],
+
+tension:0.2,
+fill:false
+}));
+
+chartPorLote = new Chart(ctxLote,{
+type:'line',
+data:{
+labels:fechas,
+datasets:datasets
+},
+options:{
+responsive:true,
+maintainAspectRatio:false
+}
+});
+
+}else{
+
+const labels = Object.keys(kpisPorLote);
+
+const data = Object.values(kpisPorLote).map(k=>k.gananciaDiariaPromedio || 0);
+
+chartPorLote = new Chart(ctxLote,{
+type:'bar',
+data:{
+labels:labels,
+datasets:[{
+label:'Ganancia Diaria Promedio',
+data:data,
+backgroundColor:'#2c4f7c'
+}]
+}
+});
+
+}
+
+}
       
       // ✅ GRÁFICO DE DISTRIBUCIÓN - COLORES VIBRANTES
       const ctxDist = document.getElementById('chartDistribucion').getContext('2d');
