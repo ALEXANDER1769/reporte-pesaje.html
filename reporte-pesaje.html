@@ -233,25 +233,20 @@
   </div>
 
   <script>
-    // ✅ CONFIGURACIÓN - SIN ESPACIOS EXTRA EN LA URL
+    // ✅ CONFIGURACIÓN
     const WORKER_URL = "https://pysiga.d-alexjose.workers.dev";
     const email = new URLSearchParams(window.location.search).get('email');
     
     let datosGlobales = null;
+    let datosFiltrados = null;
     let chartEvolucion = null, chartDistribucion = null, chartPorLote = null;
     
-    // ✅ HELPER: Acceso seguro a arrays anidados
-    function getSafeArray(obj, path) {
+    // ✅ HELPER: Acceso seguro a propiedades anidadas con fallback
+    function getData(obj, path, fallback = null) {
       try {
-        const parts = path.split('.');
-        let current = obj;
-        for (const part of parts) {
-          if (current === null || current === undefined) return [];
-          current = current[part];
-        }
-        return Array.isArray(current) ? current : [];
+        return path.split('.').reduce((acc, key) => acc?.[key], obj) ?? fallback;
       } catch {
-        return [];
+        return fallback;
       }
     }
     
@@ -267,8 +262,6 @@
     async function cargarDatos() {
       mostrarLoader(true);
       try {
-        console.log('🔄 Iniciando carga de datos...');
-        
         const response = await fetch(WORKER_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -278,157 +271,134 @@
             token: 'pysiga-node'
           })
         });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
         const data = await response.json();
-        console.log('📦 Respuesta recibida:', {
-          ok: data?.ok,
-          tieneListados: !!data?.listados,
-          animalesConDatos: data?.listados?.animalesConDatos?.length,
-          error: data?.error
-        });
         
-        if (!data || data.ok !== true) {
-          throw new Error(data?.error || 'Respuesta inválida del servidor');
+        // ✅ Validación robusta de respuesta
+        if (!data || !data.ok) {
+          throw new Error(data?.error || 'Error al cargar datos: respuesta inválida');
         }
         
         datosGlobales = data;
         
-        const animalesBase = getSafeArray(datosGlobales, 'listados.animalesConDatos');
+        // ✅ Compatibilidad: usar listados.animalesConDatos o fallback a raíz
+        const animalesConDatos = getData(data, 'listados.animalesConDatos') || 
+                                getData(data, 'animalesConDatos') || 
+                                [];
+        const animalesDesmejorados = getData(data, 'listados.animalesDesmejorados') || 
+                                    getData(data, 'animalesDesmejorados') || 
+                                    [];
         
-        if (animalesBase.length === 0 && !datosGlobales?.kpis?.general?.totalAnimalesPesados) {
-          console.warn('⚠️ No hay datos de animales para mostrar');
-        }
+        datosFiltrados = { 
+          animalesConDatos, 
+          animalesDesmejorados,
+          kpis: data.kpis || {},
+          graficos: data.graficos || {}
+        };
         
-        poblarFiltros(animalesBase);
+        poblarFiltros();
         aplicarFiltros();
         
         mostrarLoader(false);
         document.getElementById('contenido').style.display = 'block';
         
       } catch (error) {
-        console.error('❌ Error crítico en cargarDatos:', error);
+        console.error('❌ Error en cargarDatos:', error);
         alert('❌ Error: ' + error.message);
         mostrarLoader(false);
-        
-        const contenido = document.getElementById('contenido');
-        if (contenido) {
-          contenido.innerHTML = `
-            <div class="card" style="border-left: 4px solid var(--rojo);">
-              <h3 style="color: var(--rojo);">⚠️ Error al cargar datos</h3>
-              <p><strong>Detalle:</strong> ${error.message}</p>
-              <p style="font-size: 12px; color: var(--gris); margin-top: 10px;">
-                Verifica: 1) Conexión a internet, 2) Token válido, 3) Usuario autorizado
-              </p>
-              <button class="btn btn-primary" onclick="recargarDatos()">🔄 Reintentar</button>
-              <button class="btn btn-secondary" onclick="cerrar()" style="margin-left: 10px;">🚪 Cerrar</button>
-            </div>
-          `;
-          contenido.style.display = 'block';
-        }
       }
     }
     
     function aplicarFiltros() {
-      if (!datosGlobales) {
-        console.warn('⚠️ aplicarFiltros: datosGlobales no disponible');
-        return;
-      }
+      if (!datosGlobales) return;
       
-      const loteFiltro = document.getElementById('filtroLote')?.value || '';
-      const clasifFiltro = document.getElementById('filtroClasif')?.value || '';
-      const metaGanancia = parseFloat(document.getElementById('metaGanancia')?.value) || 0;
+      const loteFiltro = document.getElementById('filtroLote').value;
+      const clasifFiltro = document.getElementById('filtroClasif').value;
+      const metaGanancia = parseFloat(document.getElementById('metaGanancia').value) || 0;
       
-      const animalesBase = getSafeArray(datosGlobales, 'listados.animalesConDatos');
-      const desmejoradosBase = getSafeArray(datosGlobales, 'listados.animalesDesmejorados');
+      // ✅ Acceso seguro a los datos
+      const animalesBase = getData(datosGlobales, 'listados.animalesConDatos') || 
+                          getData(datosGlobales, 'animalesConDatos') || [];
+      const desmejoradosBase = getData(datosGlobales, 'listados.animalesDesmejorados') || 
+                              getData(datosGlobales, 'animalesDesmejorados') || [];
       
-      let animalesFiltrados = animalesBase.filter(a => {
-        if (loteFiltro && a?.lote !== loteFiltro) return false;
-        if (clasifFiltro && a?.clasificacion !== clasifFiltro) return false;
-        return true;
-      });
+      let animalesFiltrados = [...animalesBase];
+      if (loteFiltro) animalesFiltrados = animalesFiltrados.filter(a => a.lote === loteFiltro);
+      if (clasifFiltro) animalesFiltrados = animalesFiltrados.filter(a => a.clasificacion === clasifFiltro);
       
-      let desmejoradosFiltrados = desmejoradosBase.filter(a => {
-        if (loteFiltro && a?.lote !== loteFiltro) return false;
-        if (clasifFiltro && a?.clasificacion !== clasifFiltro) return false;
-        return true;
-      });
+      let desmejoradosFiltrados = [...desmejoradosBase];
+      if (loteFiltro) desmejoradosFiltrados = desmejoradosFiltrados.filter(a => a.lote === loteFiltro);
+      if (clasifFiltro) desmejoradosFiltrados = desmejoradosFiltrados.filter(a => a.clasificacion === clasifFiltro);
       
-      const animalesConGanancia = animalesFiltrados.filter(a => a?.gananciaDiaria !== null && a?.gananciaDiaria !== undefined);
+      // ✅ Cálculo de KPIs filtrados
+      const animalesConGanancia = animalesFiltrados.filter(a => a.gananciaDiaria !== null);
       const gananciaDiariaPromedio = animalesConGanancia.length > 0
         ? animalesConGanancia.reduce((sum, a) => sum + a.gananciaDiaria, 0) / animalesConGanancia.length
         : 0;
       
-      const kilosTotales = animalesFiltrados.reduce((sum, a) => sum + (a?.pesoActual || 0), 0);
+      const kilosTotales = animalesFiltrados.reduce((sum, a) => sum + a.pesoActual, 0);
       const animalesConMeta = metaGanancia > 0 ? animalesConGanancia.filter(a => a.gananciaDiaria >= metaGanancia) : [];
       const metaCumplidaCount = animalesConMeta.length;
-      const metaCumplidaPorcentaje = animalesConGanancia.length > 0 
-        ? (metaCumplidaCount / animalesConGanancia.length) * 100 
-        : 0;
+      const metaCumplidaPorcentaje = animalesConGanancia.length > 0 ? (metaCumplidaCount / animalesConGanancia.length) * 100 : 0;
       
-      const setKPI = (id, valor) => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = valor;
-      };
+      // ✅ Actualizar KPIs en UI
+      document.getElementById('kpiGananciaGeneral').textContent = gananciaDiariaPromedio.toFixed(2);
+      document.getElementById('kpiKilosTotales').textContent = Math.round(kilosTotales).toLocaleString('es-VE');
+      document.getElementById('kpiTotalAnimales').textContent = animalesFiltrados.length;
+      document.getElementById('kpiDesmejorados').textContent = desmejoradosFiltrados.length;
+      document.getElementById('kpiMetaCumplida').textContent = metaCumplidaCount;
+      document.getElementById('kpiMetaPorcentaje').textContent = `${metaCumplidaPorcentaje.toFixed(1)}% del total${metaGanancia > 0 ? ` (meta: ${metaGanancia} kg/día)` : ''}`;
       
-      setKPI('kpiGananciaGeneral', gananciaDiariaPromedio.toFixed(2));
-      setKPI('kpiKilosTotales', Math.round(kilosTotales).toLocaleString('es-VE'));
-      setKPI('kpiTotalAnimales', animalesFiltrados.length);
-      setKPI('kpiDesmejorados', desmejoradosFiltrados.length);
-      setKPI('kpiMetaCumplida', metaCumplidaCount);
-      setKPI('kpiMetaPorcentaje', `${metaCumplidaPorcentaje.toFixed(1)}% del total${metaGanancia > 0 ? ` (meta: ${metaGanancia} kg/día)` : ''}`);
-      
+      // ✅ Calcular KPIs por lote (filtrado)
       const kpisPorLote = {};
-      const lotes = [...new Set(animalesFiltrados.map(a => a?.lote).filter(l => l))];
+      const lotes = [...new Set(animalesFiltrados.map(a => a.lote))];
       lotes.forEach(lote => {
-        const animalesLote = animalesFiltrados.filter(a => a?.lote === lote);
-        const conGanancia = animalesLote.filter(a => a?.gananciaDiaria !== null);
+        const animalesLote = animalesFiltrados.filter(a => a.lote === lote);
+        const conGanancia = animalesLote.filter(a => a.gananciaDiaria !== null);
         kpisPorLote[lote] = {
           totalAnimales: animalesLote.length,
-          kilosTotales: animalesLote.reduce((sum, a) => sum + (a?.pesoActual || 0), 0),
-          gananciaDiariaPromedio: conGanancia.length > 0 
-            ? conGanancia.reduce((sum, a) => sum + a.gananciaDiaria, 0) / conGanancia.length 
-            : null
+          kilosTotales: animalesLote.reduce((sum, a) => sum + a.pesoActual, 0),
+          gananciaDiariaPromedio: conGanancia.length > 0 ? conGanancia.reduce((sum, a) => sum + a.gananciaDiaria, 0) / conGanancia.length : null
         };
       });
       
+      // ✅ Calcular KPIs por clasificación (filtrado)
       const kpisPorClasif = {};
-      const clasifs = [...new Set(animalesFiltrados.map(a => a?.clasificacion).filter(c => c && String(c).trim() !== ""))];
+      const clasifs = [...new Set(animalesFiltrados.map(a => a.clasificacion).filter(c => c && c.toString().trim() !== ""))];
       clasifs.forEach(clasif => {
-        const animalesClasif = animalesFiltrados.filter(a => a?.clasificacion === clasif);
-        const conGanancia = animalesClasif.filter(a => a?.gananciaDiaria !== null);
+        const animalesClasif = animalesFiltrados.filter(a => a.clasificacion === clasif);
+        const conGanancia = animalesClasif.filter(a => a.gananciaDiaria !== null);
         kpisPorClasif[clasif] = {
           totalAnimales: animalesClasif.length,
-          kilosTotales: animalesClasif.reduce((sum, a) => sum + (a?.pesoActual || 0), 0),
-          gananciaDiariaPromedio: conGanancia.length > 0 
-            ? conGanancia.reduce((sum, a) => sum + a.gananciaDiaria, 0) / conGanancia.length 
-            : null
+          kilosTotales: animalesClasif.reduce((sum, a) => sum + a.pesoActual, 0),
+          gananciaDiariaPromedio: conGanancia.length > 0 ? conGanancia.reduce((sum, a) => sum + a.gananciaDiaria, 0) / conGanancia.length : null
         };
       });
       
-      const graficosBackend = datosGlobales?.graficos || {};
-      const evolucionBackend = Array.isArray(graficosBackend.evolucionGananciaGeneral) 
-        ? graficosBackend.evolucionGananciaGeneral 
+      // ✅ USAR DATOS DE GRÁFICOS DEL BACKEND (serie temporal completa)
+      const graficosBackend = getData(datosGlobales, 'graficos', {});
+      const evolucionBackend = graficosBackend.evolucionGananciaGeneral || [];
+      const distribucionBackend = graficosBackend.distribucionGananciaDiaria || null;
+      
+      // Fallback: si no hay datos del backend, calcular localmente
+      const datosGraficoEvolucion = evolucionBackend.length > 0 
+        ? evolucionBackend 
         : calcularEvolucionLocal(animalesFiltrados);
       
-      const distribucionBackend = graficosBackend.distribucionGananciaDiaria;
       const distribucion = distribucionBackend || calcularDistribucionLocal(animalesConGanancia);
       
-      renderizarGraficos(evolucionBackend, distribucion, kpisPorLote, graficosBackend.evolucionPorLote || {});
+      renderizarGraficos(datosGraficoEvolucion, distribucion, kpisPorLote, graficosBackend.evolucionPorLote || {});
       renderizarTablas(kpisPorLote, kpisPorClasif, desmejoradosFiltrados, animalesFiltrados, metaGanancia);
     }
     
+    // ✅ Fallback: cálculo local de evolución (si el backend no lo envía)
     function calcularEvolucionLocal(animales) {
       const evolucionMensual = {};
       animales.forEach(animal => {
-        if (animal?.fechaUltimoPesaje) {
+        if (animal.fechaUltimoPesaje) {
           const fecha = new Date(animal.fechaUltimoPesaje);
           const mesKey = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
           if (!evolucionMensual[mesKey]) evolucionMensual[mesKey] = { gananciaAcumulada: 0, conteo: 0 };
-          if (animal?.gananciaDiaria !== null) {
+          if (animal.gananciaDiaria !== null) {
             evolucionMensual[mesKey].gananciaAcumulada += animal.gananciaDiaria;
             evolucionMensual[mesKey].conteo++;
           }
@@ -443,11 +413,11 @@
       }));
     }
     
+    // ✅ Fallback: cálculo local de distribución
     function calcularDistribucionLocal(animales) {
       const rangos = { "Negativa": 0, "0 a 0.5 kg/día": 0, "0.5 a 1 kg/día": 0, "1 a 1.5 kg/día": 0, "1.5 a 2 kg/día": 0, "Más de 2 kg/día": 0 };
       animales.forEach(a => {
-        const gd = a?.gananciaDiaria;
-        if (gd === null || gd === undefined) return;
+        const gd = a.gananciaDiaria;
         if (gd < 0) rangos["Negativa"]++;
         else if (gd < 0.5) rangos["0 a 0.5 kg/día"]++;
         else if (gd < 1) rangos["0.5 a 1 kg/día"]++;
@@ -459,18 +429,17 @@
     }
     
     function renderizarGraficos(datosEvolucion, distribucion, kpisPorLote, evolucionPorLoteBackend) {
-      // ✅ GRÁFICO DE EVOLUCIÓN
-      const ctxEvol = document.getElementById('chartEvolucion')?.getContext('2d');
-      if (!ctxEvol) return;
+      // ✅ GRÁFICO DE EVOLUCIÓN - COLORES CONTRASTANTES
+      const ctxEvol = document.getElementById('chartEvolucion').getContext('2d');
       if (chartEvolucion) chartEvolucion.destroy();
       
       chartEvolucion = new Chart(ctxEvol, {
         type: 'line',
          {
-          labels: datosEvolucion.map(d => d?.fecha || d?.mes || ''),
+          labels: datosEvolucion.map(d => d.fecha || d.mes),
           datasets: [{
             label: 'Ganancia Diaria Promedio (kg/día)',
-             datosEvolucion.map(d => d?.gananciaDiariaPromedio ?? 0),
+             datosEvolucion.map(d => d.gananciaDiariaPromedio),
             borderColor: '#e74c3c',
             backgroundColor: 'rgba(231, 76, 60, 0.2)',
             borderWidth: 3,
@@ -490,7 +459,7 @@
             tooltip: {
               callbacks: {
                 label: function(context) {
-                  return `Ganancia: ${context.parsed.y} kg/día | Animales: ${context.raw?.animalesPesados || 'N/A'}`;
+                  return `Ganancia: ${context.parsed.y} kg/día | Animales: ${context.raw.animalesPesados || 'N/A'}`;
                 }
               }
             }
@@ -502,17 +471,16 @@
         }
       });
       
-      // ✅ GRÁFICO DE DISTRIBUCIÓN
-      const ctxDist = document.getElementById('chartDistribucion')?.getContext('2d');
-      if (!ctxDist) return;
+      // ✅ GRÁFICO DE DISTRIBUCIÓN - COLORES VIBRANTES
+      const ctxDist = document.getElementById('chartDistribucion').getContext('2d');
       if (chartDistribucion) chartDistribucion.destroy();
       
       chartDistribucion = new Chart(ctxDist, {
         type: 'doughnut',
-         {
+        data: {
           labels: Object.keys(distribucion),
           datasets: [{
-             Object.values(distribucion),
+            data: Object.values(distribucion),
             backgroundColor: ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#1abc9c', '#9b59b6'],
             borderWidth: 2,
             borderColor: '#fff'
@@ -536,24 +504,19 @@
         }
       });
       
-      // ✅ GRÁFICO POR LOTE
-      const ctxLote = document.getElementById('chartPorLote')?.getContext('2d');
-      if (!ctxLote) return;
+      // ✅ GRÁFICO POR LOTE - COLORES DIFERENCIADOS
+      const ctxLote = document.getElementById('chartPorLote').getContext('2d');
       if (chartPorLote) chartPorLote.destroy();
       
+      // Si el backend envía evolución por lote completa, usarla
       if (evolucionPorLoteBackend && Object.keys(evolucionPorLoteBackend).length > 0) {
         const lotes = Object.keys(evolucionPorLoteBackend);
-        const fechas = [...new Set(lotes.flatMap(l => {
-          const arr = evolucionPorLoteBackend[l];
-          return Array.isArray(arr) ? arr.map(d => d?.fecha).filter(f => f) : [];
-        }))].sort();
+        const fechas = [...new Set(lotes.flatMap(l => evolucionPorLoteBackend[l].map(d => d.fecha)))].sort();
         
         const datasetsLote = lotes.map((lote, i) => ({
           label: lote,
            fechas.map(f => {
-            const arr = evolucionPorLoteBackend[lote];
-            if (!Array.isArray(arr)) return null;
-            const dato = arr.find(d => d?.fecha === f);
+            const dato = evolucionPorLoteBackend[lote].find(d => d.fecha === f);
             return dato?.gananciaDiariaPromedio ?? null;
           }),
           borderColor: ['#2c4f7c', '#e67e22', '#9b59b6', '#e74c3c', '#1abc9c', '#f39c12'][i % 6],
@@ -581,9 +544,10 @@
           }
         });
       } else {
+        // Fallback: gráfico de barras con KPIs actuales por lote
         const datasetsLote = Object.entries(kpisPorLote).map(([lote, kpi], i) => ({
           label: lote,
-           [kpi?.gananciaDiariaPromedio !== null && kpi?.gananciaDiariaPromedio !== undefined ? kpi.gananciaDiariaPromedio : 0],
+          data: [kpi.gananciaDiariaPromedio !== null ? kpi.gananciaDiariaPromedio : 0],
           backgroundColor: ['#2c4f7c', '#e67e22', '#9b59b6', '#e74c3c', '#1abc9c', '#f39c12'][i % 6],
           borderColor: '#fff',
           borderWidth: 2
@@ -592,7 +556,7 @@
         if (datasetsLote.length > 0) {
           chartPorLote = new Chart(ctxLote, {
             type: 'bar',
-             {
+            data: {
               labels: ['Ganancia Diaria (kg/día)'],
               datasets: datasetsLote
             },
@@ -612,102 +576,71 @@
     
     function renderizarTablas(kpisPorLote, kpisPorClasif, desmejorados, animales, metaGanancia) {
       const tbodyLotes = document.getElementById('tbodyLotes');
-      if (tbodyLotes) {
-        tbodyLotes.innerHTML = '';
-        Object.entries(kpisPorLote).forEach(([lote, kpi]) => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td><strong>${lote}</strong></td><td>${kpi?.totalAnimales || 0}</td><td>${(kpi?.kilosTotales || 0).toLocaleString('es-VE', {maximumFractionDigits: 1})}</td><td class="${(kpi?.gananciaDiariaPromedio || 0) < 0 ? 'negativo' : 'positivo'}">${kpi?.gananciaDiariaPromedio !== null && kpi?.gananciaDiariaPromedio !== undefined ? kpi.gananciaDiariaPromedio.toFixed(2) : 'N/A'}</td>`;
-          tbodyLotes.appendChild(tr);
-        });
-      }
+      tbodyLotes.innerHTML = '';
+      Object.entries(kpisPorLote).forEach(([lote, kpi]) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><strong>${lote}</strong></td><td>${kpi.totalAnimales}</td><td>${kpi.kilosTotales.toLocaleString('es-VE', {maximumFractionDigits: 1})}</td><td class="${kpi.gananciaDiariaPromedio < 0 ? 'negativo' : 'positivo'}">${kpi.gananciaDiariaPromedio !== null ? kpi.gananciaDiariaPromedio.toFixed(2) : 'N/A'}</td>`;
+        tbodyLotes.appendChild(tr);
+      });
       
       const tbodyClasif = document.getElementById('tbodyClasif');
-      if (tbodyClasif) {
-        tbodyClasif.innerHTML = '';
-        Object.entries(kpisPorClasif).forEach(([clasif, kpi]) => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td><strong>${clasif}</strong></td><td>${kpi?.totalAnimales || 0}</td><td>${(kpi?.kilosTotales || 0).toLocaleString('es-VE', {maximumFractionDigits: 1})}</td><td class="${(kpi?.gananciaDiariaPromedio || 0) < 0 ? 'negativo' : 'positivo'}">${kpi?.gananciaDiariaPromedio !== null && kpi?.gananciaDiariaPromedio !== undefined ? kpi.gananciaDiariaPromedio.toFixed(2) : 'N/A'}</td>`;
-          tbodyClasif.appendChild(tr);
-        });
-      }
+      tbodyClasif.innerHTML = '';
+      Object.entries(kpisPorClasif).forEach(([clasif, kpi]) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><strong>${clasif}</strong></td><td>${kpi.totalAnimales}</td><td>${kpi.kilosTotales.toLocaleString('es-VE', {maximumFractionDigits: 1})}</td><td class="${kpi.gananciaDiariaPromedio < 0 ? 'negativo' : 'positivo'}">${kpi.gananciaDiariaPromedio !== null ? kpi.gananciaDiariaPromedio.toFixed(2) : 'N/A'}</td>`;
+        tbodyClasif.appendChild(tr);
+      });
       
       const tbodyDesm = document.getElementById('tbodyDesmejorados');
-      if (tbodyDesm) {
-        tbodyDesm.innerHTML = '';
-        desmejorados.forEach(animal => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${animal?.id || ''}</td><td>${animal?.numeroPractico || ''}</td><td>${animal?.lote || ''}</td><td>${animal?.clasificacion || ''}</td><td class="positivo">${(animal?.gananciaDiariaAnterior || 0).toFixed(2)}</td><td class="${(animal?.gananciaDiariaActual || 0) < 0 ? 'negativo' : 'positivo'}">${(animal?.gananciaDiariaActual || 0).toFixed(2)}</td><td class="negativo">${(animal?.variacion || 0).toFixed(2)}</td><td>${(animal?.pesoActual || 0).toLocaleString('es-VE')}</td><td>${animal?.fechaUltimoPesaje || ''}</td>`;
-          tbodyDesm.appendChild(tr);
-        });
-      }
+      tbodyDesm.innerHTML = '';
+      desmejorados.forEach(animal => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${animal.id}</td><td>${animal.numeroPractico}</td><td>${animal.lote}</td><td>${animal.clasificacion}</td><td class="positivo">${animal.gananciaDiariaAnterior.toFixed(2)}</td><td class="${animal.gananciaDiariaActual < 0 ? 'negativo' : 'positivo'}">${animal.gananciaDiariaActual.toFixed(2)}</td><td class="negativo">${animal.variacion.toFixed(2)}</td><td>${animal.pesoActual.toLocaleString('es-VE')}</td><td>${animal.fechaUltimoPesaje}</td>`;
+        tbodyDesm.appendChild(tr);
+      });
       
       const tbodyDetalle = document.getElementById('tbodyDetalle');
-      if (tbodyDetalle) {
-        tbodyDetalle.innerHTML = '';
-        animales.forEach(animal => {
-          const cumpleMeta = metaGanancia > 0 && animal?.gananciaDiaria !== null && animal?.gananciaDiaria !== undefined && animal.gananciaDiaria >= metaGanancia;
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${animal?.id || ''}</td><td>${animal?.numeroPractico || ''}</td><td>${animal?.lote || ''}</td><td>${animal?.clasificacion || ''}</td><td>${(animal?.pesoActual || 0).toLocaleString('es-VE', {maximumFractionDigits: 1})}</td><td class="${(animal?.gananciaDiaria || 0) < 0 ? 'negativo' : 'positivo'}">${animal?.gananciaDiaria !== null && animal?.gananciaDiaria !== undefined ? animal.gananciaDiaria.toFixed(2) : 'N/A'}</td><td>${metaGanancia > 0 ? (cumpleMeta ? '✅' : '❌') : '-'}</td><td>${animal?.fechaUltimoPesaje || ''}</td>`;
-          tbodyDetalle.appendChild(tr);
-        });
-      }
+      tbodyDetalle.innerHTML = '';
+      animales.forEach(animal => {
+        const cumpleMeta = metaGanancia > 0 && animal.gananciaDiaria !== null && animal.gananciaDiaria >= metaGanancia;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${animal.id}</td><td>${animal.numeroPractico}</td><td>${animal.lote}</td><td>${animal.clasificacion}</td><td>${animal.pesoActual.toLocaleString('es-VE', {maximumFractionDigits: 1})}</td><td class="${animal.gananciaDiaria < 0 ? 'negativo' : 'positivo'}">${animal.gananciaDiaria !== null ? animal.gananciaDiaria.toFixed(2) : 'N/A'}</td><td>${metaGanancia > 0 ? (cumpleMeta ? '✅' : '❌') : '-'}</td><td>${animal.fechaUltimoPesaje}</td>`;
+        tbodyDetalle.appendChild(tr);
+      });
     }
     
-    // ✅ FUNCIÓN CRÍTICA: poblarFiltros
-    function poblarFiltros(animalesBase) {
-      if (!Array.isArray(animalesBase)) {
-        console.error('❌ poblarFiltros: animalesBase no es un array');
-        return;
-      }
-      
+    function poblarFiltros() {
       const filtroLote = document.getElementById('filtroLote');
       const filtroClasif = document.getElementById('filtroClasif');
       
-      if (!filtroLote || !filtroClasif) {
-        console.error('❌ Elementos de filtro no encontrados en el DOM');
-        return;
-      }
+      // ✅ Acceso seguro con fallback
+      const animalesBase = getData(datosGlobales, 'listados.animalesConDatos') || 
+                          getData(datosGlobales, 'animalesConDatos') || [];
       
-      filtroLote.innerHTML = '<option value="">Todos los lotes</option>';
-      filtroClasif.innerHTML = '<option value="">Todas</option>';
-      
-      const lotes = [...new Set(animalesBase
-        .map(a => a?.lote)
-        .filter(l => l !== null && l !== undefined && String(l).trim() !== "")
-      )].sort();
-      
+      const lotes = [...new Set(animalesBase.map(a => a.lote))].sort();
       lotes.forEach(lote => {
         const opt = document.createElement('option');
-        opt.value = String(lote);
-        opt.textContent = String(lote);
+        opt.value = lote; opt.textContent = lote;
         filtroLote.appendChild(opt);
       });
       
-      const clasifs = [...new Set(animalesBase
-        .map(a => a?.clasificacion)
-        .filter(c => c !== null && c !== undefined && String(c).trim() !== "")
-      )].sort();
-      
+      const clasifs = [...new Set(animalesBase.map(a => a.clasificacion).filter(c => c && c.toString().trim() !== ""))].sort();
       clasifs.forEach(clasif => {
         const opt = document.createElement('option');
-        opt.value = String(clasif);
-        opt.textContent = String(clasif);
+        opt.value = clasif; opt.textContent = clasif;
         filtroClasif.appendChild(opt);
       });
-      
-      console.log(`✅ Filtros poblados: ${lotes.length} lotes, ${clasifs.length} clasificaciones`);
     }
     
     function cambiarTab(tabId) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      if (event?.target) event.target.classList.add('active');
-      document.getElementById(`tab-${tabId}`)?.classList.add('active');
+      event.target.classList.add('active');
+      document.getElementById(`tab-${tabId}`).classList.add('active');
     }
     
     function mostrarLoader(mostrar) { 
-      const loader = document.getElementById('loader');
-      if (loader) loader.style.display = mostrar ? 'block' : 'none'; 
+      document.getElementById('loader').style.display = mostrar ? 'block' : 'none'; 
     }
     
     function recargarDatos() { 
