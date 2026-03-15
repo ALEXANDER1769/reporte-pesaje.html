@@ -242,13 +242,13 @@
     let chartEvolucion = null, chartDistribucion = null, chartPorLote = null;
     
     // ✅ HELPER: Acceso seguro a propiedades anidadas con fallback
-    function getData fallback = null) {
-      try {
-        return path.split('.').reduce((acc, key) => acc?.[key], obj) ?? fallback;
-      } catch {
-        return fallback;
-      }
-    }
+    function getData(obj, path, fallback = null) {
+  try {
+    return path.split('.').reduce((acc, key) => acc?.[key], obj) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
     
     document.addEventListener('DOMContentLoaded', () => {
       if (!email) {
