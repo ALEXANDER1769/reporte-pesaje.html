@@ -243,12 +243,12 @@
     
     // ✅ HELPER: Acceso seguro a propiedades anidadas con fallback
     function getData(obj, path, fallback = null) {
-  try {
-    return path.split('.').reduce((acc, key) => acc?.[key], obj) ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
+      try {
+        return path.split('.').reduce((acc, key) => acc?.[key], obj) ?? fallback;
+      } catch {
+        return fallback;
+      }
+    }
     
     document.addEventListener('DOMContentLoaded', () => {
       if (!email) {
@@ -374,9 +374,9 @@
       // ✅ USAR DATOS DE GRÁFICOS DEL BACKEND (serie temporal completa)
       const graficosBackend = getData(datosGlobales, 'graficos', {});
       const evolucionBackend = graficosBackend.evolucionGananciaGeneral || [];
-      const distribucionBackend = graficosBackend.distribucionGananciaDiaria || null;
+      const distribucionBackend = graficosBackend.danciaDiaria || null;
       
-      // Fallback: si no hay datos del backend, calcular localmente
+      // Fallback: si no hay datos del backend
       const datosGraficoEvolucion = evolucionBackend.length > 0 
         ? evolucionBackend 
         : calcularEvolucionLocal(animalesFiltrados);
@@ -413,7 +413,7 @@
     // ✅ Fallback: cálculo local de distribución
     function calcularDistribucionLocal(animales) {
       const rangos = { "Negativa": 0, "0 a 0.5 kg/día": 0, "0.5 a 1 kg/día": 0, "1 a 1.5 kg/día": 0, "1.5 a 2 kg/día": 0, "Más de 2 kg/día": 0 };
-      animales.forEach(a => {
+(a => {
         const gd = a.gananciaDiaria;
         if (gd < 0) rangos["Negativa"]++;
         else if (gd < 0.5) rangos["0 a 0.5 kg/día"]++;
@@ -425,132 +425,48 @@
       return rangos;
     }
     
-   function renderizarGraficos(datosEvolucion, distribucion, kpisPorLote, evolucionPorLoteBackend) {
-
-const ctxEvol = document.getElementById('chartEvolucion').getContext('2d');
-if(chartEvolucion) chartEvolucion.destroy();
-
-chartEvolucion = new Chart(ctxEvol,{
-type:'line',
-data:{
-labels: datosEvolucion.map(d=>d.fecha),
-datasets:[{
-label:'Ganancia Diaria Promedio (kg/día)',
-data: datosEvolucion.map(d=>d.gananciaDiariaPromedio),
-borderColor:'#e74c3c',
-backgroundColor:'rgba(231,76,60,0.2)',
-borderWidth:3,
-fill:true,
-tension:0.3,
-pointRadius:5
-}]
-},
-options:{
-responsive:true,
-maintainAspectRatio:false,
-plugins:{legend:{position:'top'}},
-scales:{
-y:{beginAtZero:false},
-x:{}
-}
-}
-});
-
-
-const ctxDist = document.getElementById('chartDistribucion').getContext('2d');
-if(chartDistribucion) chartDistribucion.destroy();
-
-chartDistribucion = new Chart(ctxDist,{
-type:'doughnut',
-data:{
-labels:Object.keys(distribucion),
-datasets:[{
-data:Object.values(distribucion),
-backgroundColor:[
-'#e74c3c',
-'#e67e22',
-'#f1c40f',
-'#2ecc71',
-'#1abc9c',
-'#9b59b6'
-],
-borderWidth:2
-}]
-},
-options:{
-responsive:true,
-maintainAspectRatio:false,
-plugins:{legend:{position:'right'}}
-}
-});
-
-
-const ctxLote = document.getElementById('chartPorLote').getContext('2d');
-if(chartPorLote) chartPorLote.destroy();
-
-if(evolucionPorLoteBackend && Object.keys(evolucionPorLoteBackend).length>0){
-
-const lotes = Object.keys(evolucionPorLoteBackend);
-
-const fechas=[...new Set(
-lotes.flatMap(l=>evolucionPorLoteBackend[l].map(d=>d.fecha))
-)].sort();
-
-const datasets = lotes.map((lote,i)=>({
-
-label:lote,
-
-data:fechas.map(f=>{
-const dato = evolucionPorLoteBackend[lote].find(d=>d.fecha===f);
-return dato?.gananciaDiariaPromedio ?? null;
-}),
-
-borderColor:[
-'#2c4f7c',
-'#e67e22',
-'#9b59b6',
-'#e74c3c',
-'#1abc9c',
-'#f39c12'
-][i%6],
-
-tension:0.2,
-fill:false
-}));
-
-chartPorLote = new Chart(ctxLote,{
-type:'line',
-data:{
-labels:fechas,
-datasets:datasets
-},
-options:{
-responsive:true,
-maintainAspectRatio:false
-}
-});
-
-}else{
-
-const labels = Object.keys(kpisPorLote);
-
-const data = Object.values(kpisPorLote).map(k=>k.gananciaDiariaPromedio || 0);
-
-chartPorLote = new Chart(ctxLote,{
-type:'bar',
-data:{
-labels:labels,
-datasets:[{
-label:'Ganancia Diaria Promedio',
-data:data,
-backgroundColor:'#2c4f7c'
-}]
-}
-});
-
-}
-
-}
+    function renderizarGraficos(datosEvolucion, distribucion, kpisPorLote, evolucionPorLoteBackend) {
+      // ✅ GRÁFICO DE EVOLUCIÓN - COLORES CONTRASTANTES
+      const ctxEvol = document.getElementById('chartEvolucion').getContext('2d');
+      if (chartEvolucion) chartEvolucion.destroy();
+      
+      chartEvolucion = new Chart(ctxEvol, {
+        type: 'line',
+         {
+          labels: datosEvolucion.map(d => d.fecha || d.mes),
+          datasets: [{
+            label: 'Ganancia Diaria Promedio (kg/día)',
+             datosEvolucion.map(d => d.gananciaDiariaPromedio),
+            borderColor: '#e74c3c',
+            backgroundColor: 'rgba(231, 76, 60, 0.2)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 5,
+            pointBackgroundColor: '#e74c3c',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
+          }]
+        },
+        options: { 
+          responsive: true, 
+          maintainAspectRatio: false, 
+          plugins: { 
+            legend: { display: true, position: 'top' },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `Ganancia: ${context.parsed.y} kg/día | Animales: ${context.raw?.animalesPesados || 'N/A'}`;
+                }
+              }
+            }
+          }, 
+          scales: { 
+            y: { beginAtZero: false, grid: { color: '#e0e0e0' }, title: { display: true, text: 'kg/día' } }, 
+            x: { grid: { color: '#e0e0e0' }, title: { display: true, text: 'Fecha' } } 
+          } 
+        }
+      });
       
       // ✅ GRÁFICO DE DISTRIBUCIÓN - COLORES VIBRANTES
       const ctxDist = document.getElementById('chartDistribucion').getContext('2d');
@@ -558,10 +474,10 @@ backgroundColor:'#2c4f7c'
       
       chartDistribucion = new Chart(ctxDist, {
         type: 'doughnut',
-        data: {  // ✅ Corregido: añadido "data:"
+        data: {
           labels: Object.keys(distribucion),
           datasets: [{
-             Object.values(distribucion),  // ✅ Corregido: añadido "data:"
+             Object.values(distribucion),
             backgroundColor: ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#1abc9c', '#9b59b6'],
             borderWidth: 2,
             borderColor: '#fff'
@@ -610,7 +526,7 @@ backgroundColor:'#2c4f7c'
         
         chartPorLote = new Chart(ctxLote, {
           type: 'line',
-           {  // ✅ Corregido: añadido ""
+           {
             labels: fechas,
             datasets: datasetsLote
           },
@@ -628,7 +544,7 @@ backgroundColor:'#2c4f7c'
         // Fallback: gráfico de barras con KPIs actuales por lote
         const datasetsLote = Object.entries(kpisPorLote).map(([lote, kpi], i) => ({
           label: lote,
-          data: [kpi.gananciaDiariaPromedio !== null ? kpi.gananciaDiariaPromedio : 0],
+           [kpi.gananciaDiariaPromedio !== null ? kpi.gananciaDiariaPromedio : 0],
           backgroundColor: ['#2c4f7c', '#e67e22', '#9b59b6', '#e74c3c', '#1abc9c', '#f39c12'][i % 6],
           borderColor: '#fff',
           borderWidth: 2
@@ -637,7 +553,7 @@ backgroundColor:'#2c4f7c'
         if (datasetsLote.length > 0) {
           chartPorLote = new Chart(ctxLote, {
             type: 'bar',
-             {  // ✅ Corregido: añadido ""
+             {
               labels: ['Ganancia Diaria (kg/día)'],
               datasets: datasetsLote
             },
@@ -701,7 +617,7 @@ backgroundColor:'#2c4f7c'
       lotes.forEach(lote => {
         const opt = document.createElement('option');
         opt.value = lote; opt.textContent = lote;
-        filtroL);
+        filtroLote.appendChild(opt);
       });
       
       const clasifs = [...new Set(animalesBase.map(a => a.clasificacion).filter(c => c && c.toString().trim() !== ""))].sort();
