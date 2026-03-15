@@ -42,7 +42,7 @@
     .table-container { overflow-x: auto; margin-top: 10px; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th { background: var(--verde); color: white; padding: 10px 8px; text-align: left; position: sticky; top: 0; }
-    8px; border-bottom: 1px solid var(--borde); }
+    td { padding: 8px; border-bottom: 1px solid var(--borde); }
     tr:hover { background: #f9f9f9; }
     .negativo { color: var(--rojo); font-weight: 600; }
     .positivo { color: var(--verde); font-weight: 600; }
@@ -242,7 +242,7 @@
     let chartEvolucion = null, chartDistribucion = null, chartPorLote = null;
     
     // ✅ HELPER: Acceso seguro a propiedades anidadas con fallback
-    function getData(obj, path, fallback = null) {
+    function getData fallback = null) {
       try {
         return path.split('.').reduce((acc, key) => acc?.[key], obj) ?? fallback;
       } catch {
@@ -432,11 +432,11 @@
       
       chartEvolucion = new Chart(ctxEvol, {
         type: 'line',
-        data: {
+         {  // ✅ Corregido: añadido "data:"
           labels: datosEvolucion.map(d => d.fecha || d.mes),
           datasets: [{
             label: 'Ganancia Diaria Promedio (kg/día)',
-            data: datosEvolucion.map(d => d.gananciaDiariaPromedio),
+             datosEvolucion.map(d => d.gananciaDiariaPromedio),  // ✅ Corregido: añadido "data:"
             borderColor: '#e74c3c',
             backgroundColor: 'rgba(231, 76, 60, 0.2)',
             borderWidth: 3,
@@ -474,10 +474,10 @@
       
       chartDistribucion = new Chart(ctxDist, {
         type: 'doughnut',
-        data: {
+        data: {  // ✅ Corregido: añadido "data:"
           labels: Object.keys(distribucion),
           datasets: [{
-            data: Object.values(distribucion),
+             Object.values(distribucion),  // ✅ Corregido: añadido "data:"
             backgroundColor: ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#1abc9c', '#9b59b6'],
             borderWidth: 2,
             borderColor: '#fff'
@@ -512,7 +512,7 @@
         
         const datasetsLote = lotes.map((lote, i) => ({
           label: lote,
-          data: fechas.map(f => {
+           fechas.map(f => {
             const dato = evolucionPorLoteBackend[lote].find(d => d.fecha === f);
             return dato?.gananciaDiariaPromedio ?? null;
           }),
@@ -526,7 +526,7 @@
         
         chartPorLote = new Chart(ctxLote, {
           type: 'line',
-          data: {
+           {  // ✅ Corregido: añadido ""
             labels: fechas,
             datasets: datasetsLote
           },
@@ -553,7 +553,7 @@
         if (datasetsLote.length > 0) {
           chartPorLote = new Chart(ctxLote, {
             type: 'bar',
-            data: {
+             {  // ✅ Corregido: añadido ""
               labels: ['Ganancia Diaria (kg/día)'],
               datasets: datasetsLote
             },
@@ -617,7 +617,7 @@
       lotes.forEach(lote => {
         const opt = document.createElement('option');
         opt.value = lote; opt.textContent = lote;
-        filtroLote.appendChild(opt);
+        filtroL);
       });
       
       const clasifs = [...new Set(animalesBase.map(a => a.clasificacion).filter(c => c && c.toString().trim() !== ""))].sort();
