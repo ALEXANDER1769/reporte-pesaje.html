@@ -241,10 +241,16 @@
     let datosFiltrados = null;
     let chartEvolucion = null, chartDistribucion = null, chartPorLote = null;
     
-    // ✅ HELPER: Acceso seguro a propiedades anidadas con fallback
+    // ✅ HELPER: Acceso seguro a propiedades anidadas con fallback (versión compatible)
     function getData(obj, path, fallback = null) {
       try {
-        return path.split('.').reduce((acc, key) => acc?.[key], obj) ?? fallback;
+        const keys = path.split('.');
+        let result = obj;
+        for (let i = 0; i < keys.length; i++) {
+          if (result == null) return fallback;
+          result = result[keys[i]];
+        }
+        return result != null ? result : fallback;
       } catch {
         return fallback;
       }
@@ -374,7 +380,7 @@
       // ✅ USAR DATOS DE GRÁFICOS DEL BACKEND (serie temporal completa)
       const graficosBackend = getData(datosGlobales, 'graficos', {});
       const evolucionBackend = graficosBackend.evolucionGananciaGeneral || [];
-      const distribucionBackend = graficosBackend.danciaDiaria || null;
+      const distribucionBackend = graficosBackend.distribucionGananciaDiaria || null;
       
       // Fallback: si no hay datos del backend
       const datosGraficoEvolucion = evolucionBackend.length > 0 
@@ -413,7 +419,7 @@
     // ✅ Fallback: cálculo local de distribución
     function calcularDistribucionLocal(animales) {
       const rangos = { "Negativa": 0, "0 a 0.5 kg/día": 0, "0.5 a 1 kg/día": 0, "1 a 1.5 kg/día": 0, "1.5 a 2 kg/día": 0, "Más de 2 kg/día": 0 };
-(a => {
+      animales.forEach(a => {
         const gd = a.gananciaDiaria;
         if (gd < 0) rangos["Negativa"]++;
         else if (gd < 0.5) rangos["0 a 0.5 kg/día"]++;
