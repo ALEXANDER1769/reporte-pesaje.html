@@ -10,18 +10,16 @@
       --verde: #2f6f4e; --verde-claro: #e6f1eb; --azul: #2c4f7c;
       --tierra: #8b6f47; --rojo: #e74c3c; --gris: #7f8c8d;
       --fondo: #f7f9f8; --blanco: #ffffff; --borde: #ddd;
-      --naranja: #e67e22; --morado: #9b59b6; --cyan: #1abc9c;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, -apple-system, sans-serif; background: var(--fondo); color: #333; line-height: 1.5; }
+    body { font-family: system-ui, sans-serif; background: var(--fondo); color: #333; line-height: 1.5; }
     .container { max-width: 1400px; margin: auto; padding: 15px; }
     
     .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; margin-bottom: 20px; border-bottom: 2px solid var(--verde); }
     .header h1 { color: var(--verde); font-size: 22px; }
+    
     .btn { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: opacity 0.2s; }
-    .btn:hover { opacity: 0.9; }
     .btn-primary { background: var(--verde); color: white; }
-    .btn-danger { background: var(--rojo); color: white; }
     .btn-secondary { background: var(--tierra); color: white; }
     
     .card { background: var(--blanco); border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
@@ -31,37 +29,28 @@
     .kpi-card { background: var(--verde-claro); padding: 15px; border-radius: 8px; text-align: center; border-left: 4px solid var(--verde); }
     .kpi-value { font-size: 24px; font-weight: 700; color: var(--verde); margin: 5px 0; }
     .kpi-label { font-size: 13px; color: var(--gris); }
-    .kpi-unit { font-size: 12px; color: var(--gris); }
     
-    .tabs { display: flex; gap: 5px; margin-bottom: 15px; flex-wrap: wrap; }
-    .tab { padding: 8px 16px; background: var(--gris); color: white; border: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 14px; }
+    .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; align-items: center; background: var(--verde-claro); padding: 15px; border-radius: 8px; }
+    .filters select, .filters input { padding: 8px 12px; border: 1px solid var(--borde); border-radius: 6px; }
+    
+    .tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; }
+    .tab { padding: 10px 20px; background: var(--gris); color: white; border: none; border-radius: 6px 6px 0 0; cursor: pointer; white-space: nowrap; }
     .tab.active { background: var(--verde); font-weight: 600; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     
-    .table-container { overflow-x: auto; margin-top: 10px; }
+    .table-container { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th { background: var(--verde); color: white; padding: 10px 8px; text-align: left; position: sticky; top: 0; }
-    td { padding: 8px; border-bottom: 1px solid var(--borde); }
-    tr:hover { background: #f9f9f9; }
-    .negativo { color: var(--rojo); font-weight: 600; }
-    .positivo { color: var(--verde); font-weight: 600; }
+    th { background: var(--verde); color: white; padding: 12px 8px; text-align: left; }
+    td { padding: 10px 8px; border-bottom: 1px solid var(--borde); }
+    .negativo { color: var(--rojo); font-weight: bold; }
+    .positivo { color: var(--verde); font-weight: bold; }
     
-    .chart-container { position: relative; height: 350px; margin: 20px 0; }
+    .chart-container { position: relative; height: 350px; width: 100%; margin: 10px 0; }
     
-    .loader { text-align: center; padding: 40px; }
-    .loader .vaca { font-size: 40px; animation: mover 1s infinite alternate; margin-bottom: 15px; }
+    .loader { text-align: center; padding: 50px; }
     @keyframes mover { from { transform: translateX(-5px); } to { transform: translateX(5px); } }
-    
-    .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; align-items: center; background: var(--verde-claro); padding: 15px; border-radius: 8px; }
-    .filters select, .filters input { padding: 8px 12px; border: 1px solid var(--borde); border-radius: 6px; font-size: 14px; }
-    .filters label { font-weight: 600; color: var(--azul); }
-    
-    @media (max-width: 768px) {
-      .header { flex-direction: column; gap: 10px; text-align: center; }
-      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-      .filters { flex-direction: column; align-items: stretch; }
-    }
+    .vaca { font-size: 40px; animation: mover 1s infinite alternate; }
   </style>
 </head>
 <body>
@@ -69,134 +58,62 @@
     <div class="header">
       <h1>🐄 Reporte de Pesaje Corporal</h1>
       <div style="display: flex; gap: 10px;">
-        <button class="btn btn-secondary" onclick="imprimir()">🖨️ Imprimir</button>
-        <button class="btn btn-danger" onclick="cerrar()">🚪 Cerrar</button>
+        <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir</button>
+        <button class="btn btn-primary" onclick="cargarDatos()">🔄 Actualizar</button>
       </div>
     </div>
     
     <div id="loader" class="card loader">
       <div class="vaca">🐄</div>
-      <div>Cargando datos de pesaje y calculando KPIs…</div>
+      <p>Procesando datos del pesaje...</p>
     </div>
     
     <div id="contenido" style="display: none;">
       <div class="card">
         <div class="filters">
-          <label><strong>Filtrar por Lote:</strong></label>
-          <select id="filtroLote" onchange="aplicarFiltros()">
-            <option value="">Todos los lotes</option>
-          </select>
+          <label><strong>Lote:</strong></label>
+          <select id="filtroLote" onchange="aplicarFiltros()"><option value="">Todos</option></select>
           <label><strong>Clasificación:</strong></label>
-          <select id="filtroClasif" onchange="aplicarFiltros()">
-            <option value="">Todas</option>
-          </select>
-          <label><strong>Meta Ganancia (kg/día):</strong></label>
-          <input type="number" id="metaGanancia" step="0.01" min="0" max="5" placeholder="Ej: 0.8" onchange="aplicarFiltros()" style="width: 100px;">
-          <button class="btn btn-primary" onclick="recargarDatos()">🔄 Actualizar</button>
+          <select id="filtroClasif" onchange="aplicarFiltros()"><option value="">Todas</option></select>
+          <label><strong>Meta (kg/día):</strong></label>
+          <input type="number" id="metaGanancia" step="0.1" value="0.80" onchange="aplicarFiltros()" style="width: 80px;">
         </div>
       </div>
       
-      <div class="card">
-        <div class="card-title">📊 Indicadores Clave (KPIs)</div>
-        <div class="kpi-grid">
-          <div class="kpi-card">
-            <div class="kpi-label">Ganancia Diaria General</div>
-            <div class="kpi-value" id="kpiGananciaGeneral">--</div>
-            <div class="kpi-unit">kg/día promedio</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Kilos Totales Generales</div>
-            <div class="kpi-value" id="kpiKilosTotales">--</div>
-            <div class="kpi-unit">kg en último pesaje</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Animales Evaluados</div>
-            <div class="kpi-value" id="kpiTotalAnimales">--</div>
-            <div class="kpi-unit">con pesaje registrado</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Animales Desmejorados</div>
-            <div class="kpi-value" id="kpiDesmejorados" style="color: var(--rojo);">--</div>
-            <div class="kpi-unit">redujeron ganancia</div>
-          </div>
-          <div class="kpi-card" style="border-left-color: var(--azul);">
-            <div class="kpi-label">Meta Cumplida</div>
-            <div class="kpi-value" id="kpiMetaCumplida" style="color: var(--azul);">--</div>
-            <div class="kpi-unit" id="kpiMetaPorcentaje">0% del total</div>
-          </div>
-        </div>
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Ganancia Diaria Prom.</div><div class="kpi-value" id="kpiG">--</div><div class="kpi-unit">kg/día</div></div>
+        <div class="kpi-card"><div class="kpi-label">Kilos Totales</div><div class="kpi-value" id="kpiK">--</div><div class="kpi-unit">kg actuales</div></div>
+        <div class="kpi-card"><div class="kpi-label">Animales Evaluados</div><div class="kpi-value" id="kpiA">--</div><div class="kpi-unit">cabezas</div></div>
+        <div class="kpi-card" style="border-left-color: var(--azul);"><div class="kpi-label">Meta Cumplida</div><div class="kpi-value" id="kpiM" style="color: var(--azul);">--</div><div id="kpiMPorc" class="kpi-unit">0% del total</div></div>
       </div>
       
       <div class="tabs">
         <button class="tab active" onclick="cambiarTab('general')">📈 Evolución General</button>
-        <button class="tab" onclick="cambiarTab('lotes')">📦 Por Lote</button>
-        <button class="tab" onclick="cambiarTab('clasificacion')">🏷️ Por Clasificación</button>
-        <button class="tab" onclick="cambiarTab('desmejorados')">⚠️ Animales Desmejorados</button>
-        <button class="tab" onclick="cambiarTab('detalle')">📋 Detalle Completo</button>
+        <button class="tab" onclick="cambiarTab('lotes')">📦 Análisis por Lote</button>
+        <button class="tab" onclick="cambiarTab('detalle')">📋 Detalle de Animales</button>
       </div>
       
       <div id="tab-general" class="tab-content active">
         <div class="card">
           <div class="card-title">📈 Evolución de Ganancia Diaria en el Tiempo</div>
-          <div class="chart-container">
-            <canvas id="chartEvolucion"></canvas>
-          </div>
+          <div class="chart-container"><canvas id="chartEvolucion"></canvas></div>
         </div>
         <div class="card">
-          <div class="card-title">⚖️ Distribución de Ganancia Diaria</div>
-          <div class="chart-container">
-            <canvas id="chartDistribucion"></canvas>
-          </div>
+          <div class="card-title">⚖️ Distribución de Rendimiento</div>
+          <div class="chart-container"><canvas id="chartDistribucion"></canvas></div>
         </div>
       </div>
       
       <div id="tab-lotes" class="tab-content">
         <div class="card">
-          <div class="card-title">📦 KPIs por Lote</div>
+          <div class="card-title">📊 Comparativa de Ganancia por Lote</div>
+          <div class="chart-container"><canvas id="chartLotes"></canvas></div>
+        </div>
+        <div class="card">
           <div class="table-container">
-            <table id="tablaLotes">
-              <thead>
-                <tr><th>Lote</th><th>Animales</th><th>Kilos Totales</th><th>Ganancia Diaria Prom.</th></tr>
-              </thead>
+            <table>
+              <thead><tr><th>Lote</th><th>Cabezas</th><th>Kilos Totales</th><th>Ganancia Prom.</th></tr></thead>
               <tbody id="tbodyLotes"></tbody>
-            </table>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">📊 Evolución Histórica por Lote</div>
-          <div class="chart-container">
-            <canvas id="chartPorLote"></canvas>
-          </div>
-        </div>
-      </div>
-      
-      <div id="tab-clasificacion" class="tab-content">
-        <div class="card">
-          <div class="card-title">🏷️ KPIs por Clasificación de Animal</div>
-          <div class="table-container">
-            <table id="tablaClasif">
-              <thead>
-                <tr><th>Clasificación</th><th>Animales</th><th>Kilos Totales</th><th>Ganancia Diaria Prom.</th></tr>
-              </thead>
-              <tbody id="tbodyClasif"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      
-      <div id="tab-desmejorados" class="tab-content">
-        <div class="card">
-          <div class="card-title">⚠️ Animales que Redujeron su Ganancia Diaria</div>
-          <div class="table-container">
-            <table id="tablaDesmejorados">
-              <thead>
-                <tr>
-                  <th>ID</th><th>N° Práctico</th><th>Lote</th><th>Clasificación</th>
-                  <th>Ganancia Ant.</th><th>Ganancia Act.</th><th>Variación</th>
-                  <th>Peso Actual</th><th>Último Pesaje</th>
-                </tr>
-              </thead>
-              <tbody id="tbodyDesmejorados"></tbody>
             </table>
           </div>
         </div>
@@ -204,15 +121,9 @@
       
       <div id="tab-detalle" class="tab-content">
         <div class="card">
-          <div class="card-title">📋 Detalle de Todos los Animales</div>
           <div class="table-container">
-            <table id="tablaDetalle">
-              <thead>
-                <tr>
-                  <th>ID</th><th>N° Práctico</th><th>Lote</th><th>Clasificación</th>
-                  <th>Peso Actual</th><th>Ganancia Diaria</th><th>Meta</th><th>Último Pesaje</th>
-                </tr>
-              </thead>
+            <table>
+              <thead><tr><th>ID</th><th>N° Práct.</th><th>Lote</th><th>Clasif.</th><th>Peso Actual</th><th>Ganancia</th><th>Meta</th></tr></thead>
               <tbody id="tbodyDetalle"></tbody>
             </table>
           </div>
@@ -224,222 +135,139 @@
   <script>
     const WORKER_URL = "https://pysiga.d-alexjose.workers.dev";
     const email = "alexdugarte@yahoo.com";
-    
     let datosGlobales = null;
-    let chartEvolucion = null, chartDistribucion = null, chartPorLote = null;
-
-    function getData(obj, path, fallback = null) {
-      try {
-        const keys = path.split('.');
-        let result = obj;
-        for (let key of keys) {
-          if (result == null) return fallback;
-          result = result[key];
-        }
-        return result != null ? result : fallback;
-      } catch { return fallback; }
-    }
+    let charts = { evol: null, dist: null, lote: null };
 
     document.addEventListener('DOMContentLoaded', cargarDatos);
 
     async function cargarDatos() {
       mostrarLoader(true);
       try {
-        const response = await fetch(WORKER_URL, {
+        const res = await fetch(WORKER_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ accion: 'reportePesajeCorporal', email, token: 'pysiga-node' })
         });
-        const data = await response.json();
-        if (!data || !data.ok) throw new Error(data?.error || 'Error al cargar datos');
+        const data = await res.json();
+        if(!data.ok) throw new Error(data.error);
         
         datosGlobales = data;
         poblarFiltros();
         aplicarFiltros();
-        mostrarLoader(false);
-        document.getElementById('contenido').style.display = 'block';
-      } catch (error) {
-        alert('❌ Error: ' + error.message);
-        mostrarLoader(false);
-      }
+      } catch (e) { alert("Error al cargar: " + e.message); }
+      finally { mostrarLoader(false); document.getElementById('contenido').style.display = 'block'; }
     }
 
     function aplicarFiltros() {
       if (!datosGlobales) return;
-      
-      const loteFiltro = document.getElementById('filtroLote').value;
-      const clasifFiltro = document.getElementById('filtroClasif').value;
-      const metaGanancia = parseFloat(document.getElementById('metaGanancia').value) || 0;
-      
-      const animalesBase = getData(datosGlobales, 'animales', []);
-      const desmejoradosBase = getData(datosGlobales, 'listados.animalesDesmejorados', []) || getData(datosGlobales, 'animalesDesmejorados', []);
-      
-      let animalesFiltrados = animalesBase.filter(a => (!loteFiltro || a.lote === loteFiltro) && (!clasifFiltro || a.clasificacion === clasifFiltro));
-      let desmejoradosFiltrados = desmejoradosBase.filter(a => (!loteFiltro || a.lote === loteFiltro) && (!clasifFiltro || a.clasificacion === clasifFiltro));
-      
-      const animalesConGanancia = animalesFiltrados.filter(a => a.gananciaDiaria !== null);
-      const gdProm = animalesConGanancia.length ? animalesConGanancia.reduce((s, a) => s + a.gananciaDiaria, 0) / animalesConGanancia.length : 0;
-      const kTotales = animalesFiltrados.reduce((s, a) => s + a.pesoActual, 0);
-      const metaCount = metaGanancia > 0 ? animalesConGanancia.filter(a => a.gananciaDiaria >= metaGanancia).length : 0;
+      const fLote = document.getElementById('filtroLote').value;
+      const fClas = document.getElementById('filtroClasif').value;
+      const meta = parseFloat(document.getElementById('metaGanancia').value) || 0;
 
-      document.getElementById('kpiGananciaGeneral').textContent = gdProm.toFixed(2);
-      document.getElementById('kpiKilosTotales').textContent = Math.round(kTotales).toLocaleString('es-VE');
-      document.getElementById('kpiTotalAnimales').textContent = animalesFiltrados.length;
-      document.getElementById('kpiDesmejorados').textContent = desmejoradosFiltrados.length;
-      document.getElementById('kpiMetaCumplida').textContent = metaCount;
-      document.getElementById('kpiMetaPorcentaje').textContent = `${(animalesConGanancia.length ? (metaCount/animalesConGanancia.length)*100 : 0).toFixed(1)}% del total`;
+      // Filtrado de la lista base
+      const animales = (datosGlobales.animales || []).filter(a => 
+        (!fLote || a.lote === fLote) && (!fClas || a.clasificacion === fClas));
 
-      const kpisPorLote = agruparPor(animalesFiltrados, 'lote');
-      const kpisPorClasif = agruparPor(animalesFiltrados, 'clasificacion');
+      const conG = animales.filter(a => a.gananciaDiaria !== null);
       
-      const graficos = getData(datosGlobales, 'graficos', {});
-      renderizarGraficos(
-        graficos.evolucionGananciaGeneral || [], 
-        graficos.distribucionGananciaDiaria || calcularDistribucionLocal(animalesConGanancia),
-        kpisPorLote,
-        graficos.evolucionPorLote || {},
-        metaGanancia
-      );
-      renderizarTablas(kpisPorLote, kpisPorClasif, desmejoradosFiltrados, animalesFiltrados, metaGanancia);
+      // Mapeo dinámico según diagnóstico (kpis.general)
+      const k = datosGlobales.kpis.general;
+      const promG = conG.length ? conG.reduce((s, a) => s + a.gananciaDiaria, 0) / conG.length : 0;
+      const mCount = meta > 0 ? conG.filter(a => a.gananciaDiaria >= meta).length : 0;
+
+      document.getElementById('kpiG').textContent = promG.toFixed(2);
+      document.getElementById('kpiK').textContent = Math.round(animales.reduce((s, a) => s + (a.pesoActual || 0), 0)).toLocaleString();
+      document.getElementById('kpiA').textContent = animales.length;
+      document.getElementById('kpiM').textContent = mCount;
+      document.getElementById('kpiMPorc').textContent = (conG.length ? (mCount/conG.length*100).toFixed(1) : 0) + "% del total";
+
+      renderizar(animales, meta);
     }
 
-    function renderizarGraficos(datosEvol, distribucion, kpisPorLote, evolLoteBackend, meta) {
-      // 1. Gráfico General con línea de Meta
-      const ctxEvol = document.getElementById('chartEvolucion').getContext('2d');
-      if (chartEvolucion) chartEvolucion.destroy();
-      
-      const datasetsEvol = [{
-        label: 'Ganancia (kg/día)',
-        data: datosEvol.map(d => d.gananciaPromedio || d.gananciaDiariaPromedio || 0),
-        borderColor: '#e74c3c', backgroundColor: 'rgba(231, 76, 60, 0.1)', fill: true, tension: 0.3
-      }];
-
-      if (meta > 0) {
-        datasetsEvol.push({
-          label: 'Meta', data: datosEvol.map(() => meta),
-          borderColor: '#2c4f7c', borderDash: [5, 5], borderWidth: 2, pointRadius: 0, fill: false
-        });
-      }
-
-      chartEvolucion = new Chart(ctxEvol, {
+    function renderizar(animales, meta) {
+      // 1. Gráfico Evolución (Usa 'gananciaPromedio' detectado en diagnóstico)
+      const evolData = datosGlobales.graficos.evolucionGananciaGeneral || [];
+      if (charts.evol) charts.evol.destroy();
+      charts.evol = new Chart(document.getElementById('chartEvolucion'), {
         type: 'line',
-        data: { labels: datosEvol.map(d => d.fecha), datasets: datasetsEvol },
+        data: {
+          labels: evolData.map(d => d.fecha),
+          datasets: [
+            { label: 'Promedio (kg/día)', data: evolData.map(d => d.gananciaPromedio), borderColor: '#e74c3c', tension: 0.3, fill: false },
+            meta > 0 ? { label: 'Meta', data: evolData.map(() => meta), borderColor: '#2c4f7c', borderDash: [5, 5], pointRadius: 0, fill: false } : null
+          ].filter(Boolean)
+        },
         options: { responsive: true, maintainAspectRatio: false }
       });
 
-      // 2. Distribución
-      const ctxDist = document.getElementById('chartDistribucion').getContext('2d');
-      if (chartDistribucion) chartDistribucion.destroy();
-      chartDistribucion = new Chart(ctxDist, {
-        type: 'doughnut',
-        data: { labels: Object.keys(distribucion), datasets: [{ data: Object.values(distribucion), backgroundColor: ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#1abc9c'] }] },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-
-      // 3. Evolución por Lote (Líneas históricas)
-      const ctxLote = document.getElementById('chartPorLote').getContext('2d');
-      if (chartPorLote) chartPorLote.destroy();
-
-      const colores = ['#27ae60', '#2980b9', '#8e44ad', '#f39c12', '#2c3e50', '#c0392b'];
-      const lotesKeys = Object.keys(evolLoteBackend);
-
-      if (lotesKeys.length > 0) {
-        const fechas = [...new Set(Object.values(evolLoteBackend).flatMap(l => l.map(d => d.fecha)))].sort();
-        const datasetsLotes = lotesKeys.map((lote, i) => ({
-          label: lote,
-          data: fechas.map(f => {
-            const r = evolLoteBackend[lote].find(d => d.fecha === f);
-            return r ? (r.gananciaPromedio || r.gananciaDiariaPromedio) : null;
-          }),
-          borderColor: colores[i % colores.length], tension: 0.2, spanGaps: true
-        }));
-
-        if (meta > 0) {
-          datasetsLotes.push({
-            label: 'Meta Objetivo', data: fechas.map(() => meta),
-            borderColor: 'rgba(0,0,0,0.5)', borderDash: [10, 5], borderWidth: 2, pointRadius: 0, fill: false
-          });
-        }
-
-        chartPorLote = new Chart(ctxLote, {
-          type: 'line',
-          data: { labels: fechas, datasets: datasetsLotes },
-          options: { responsive: true, maintainAspectRatio: false }
-        });
-      }
-    }
-
-    function agruparPor(animales, prop) {
-      const grupos = {};
-      [...new Set(animales.map(a => a[prop]).filter(v => v))].forEach(val => {
-        const sub = animales.filter(a => a[prop] === val);
-        const conG = sub.filter(a => a.gananciaDiaria !== null);
-        grupos[val] = {
-          totalAnimales: sub.length,
-          kilosTotales: sub.reduce((s, a) => s + a.pesoActual, 0),
-          gananciaDiariaPromedio: conG.length ? conG.reduce((s, a) => s + a.gananciaDiaria, 0) / conG.length : 0
-        };
-      });
-      return grupos;
-    }
-
-    function calcularDistribucionLocal(animales) {
-      const r = { "Negativa": 0, "0 a 0.5": 0, "0.5 a 1": 0, "1 a 1.5": 0, "Más de 1.5": 0 };
+      // 2. Gráfico por Lotes (Cálculo dinámico)
+      const lotesAgrupados = {};
       animales.forEach(a => {
-        const gd = a.gananciaDiaria;
-        if (gd < 0) r["Negativa"]++;
-        else if (gd < 0.5) r["0 a 0.5"]++;
-        else if (gd < 1) r["0.5 a 1"]++;
-        else if (gd < 1.5) r["1 a 1.5"]++;
-        else r["Más de 1.5"]++;
-      });
-      return r;
-    }
-
-    function renderizarTablas(kLote, kClasif, desm, animales, meta) {
-      const fill = (id, data) => {
-        const tb = document.getElementById(id); tb.innerHTML = '';
-        Object.entries(data).forEach(([k, v]) => {
-          tb.innerHTML += `<tr><td><strong>${k}</strong></td><td>${v.totalAnimales}</td><td>${Math.round(v.kilosTotales)}</td><td class="${v.gananciaDiariaPromedio < 0 ? 'negativo' : 'positivo'}">${v.gananciaDiariaPromedio.toFixed(2)}</td></tr>`;
-        });
-      };
-      fill('tbodyLotes', kLote);
-      fill('tbodyClasif', kClasif);
-
-      const tbD = document.getElementById('tbodyDesmejorados'); tbD.innerHTML = '';
-      desm.forEach(a => {
-        tbD.innerHTML += `<tr><td>${a.id}</td><td>${a.numeroPractico}</td><td>${a.lote}</td><td>${a.clasificacion}</td><td>${a.gananciaDiariaAnterior.toFixed(2)}</td><td>${a.gananciaDiariaActual.toFixed(2)}</td><td class="negativo">${a.variacion.toFixed(2)}</td><td>${a.pesoActual}</td><td>${a.fechaUltimoPesaje}</td></tr>`;
+        if(!lotesAgrupados[a.lote]) lotesAgrupados[a.lote] = { g: [], kg: 0, n: 0 };
+        lotesAgrupados[a.lote].n++;
+        lotesAgrupados[a.lote].kg += (a.pesoActual || 0);
+        if(a.gananciaDiaria !== null) lotesAgrupados[a.lote].g.push(a.gananciaDiaria);
       });
 
-      const tbDet = document.getElementById('tbodyDetalle'); tbDet.innerHTML = '';
+      const labelsLote = Object.keys(lotesAgrupados);
+      const valuesLote = labelsLote.map(l => {
+        const arr = lotesAgrupados[l].g;
+        return arr.length ? arr.reduce((s,v)=>s+v,0)/arr.length : 0;
+      });
+
+      if (charts.lote) charts.lote.destroy();
+      charts.lote = new Chart(document.getElementById('chartLotes'), {
+        type: 'bar',
+        data: {
+          labels: labelsLote,
+          datasets: [{ label: 'kg/día', data: valuesLote, backgroundColor: '#2c4f7c' }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      // 3. Tablas
+      const tbL = document.getElementById('tbodyLotes'); tbL.innerHTML = '';
+      labelsLote.forEach((l, i) => {
+        tbL.innerHTML += `<tr><td><strong>${l}</strong></td><td>${lotesAgrupados[l].n}</td><td>${Math.round(lotesAgrupados[l].kg)}</td><td class="${valuesLote[i]<0?'negativo':'positivo'}">${valuesLote[i].toFixed(2)}</td></tr>`;
+      });
+
+      const tbD = document.getElementById('tbodyDetalle'); tbD.innerHTML = '';
       animales.forEach(a => {
         const cumple = meta > 0 && a.gananciaDiaria >= meta;
-        tbDet.innerHTML += `<tr><td>${a.id}</td><td>${a.numeroPractico}</td><td>${a.lote}</td><td>${a.clasificacion}</td><td>${a.pesoActual}</td><td class="${a.gananciaDiaria < 0 ? 'negativo' : 'positivo'}">${a.gananciaDiaria?.toFixed(2) || '0.00'}</td><td>${meta > 0 ? (cumple ? '✅' : '❌') : '-'}</td><td>${a.fechaUltimoPesaje}</td></tr>`;
+        tbD.innerHTML += `<tr><td>${a.id}</td><td>${a.numeroPractico}</td><td>${a.lote}</td><td>${a.clasificacion}</td><td>${a.pesoActual}</td><td class="${a.gananciaDiaria<0?'negativo':'positivo'}">${(a.gananciaDiaria||0).toFixed(2)}</td><td>${meta>0 ? (cumple?'✅':'❌') : '-'}</td></tr>`;
+      });
+      
+      // 4. Distribución (Torta)
+      const dist = { "Baja (<0.5)": 0, "Media (0.5-1.0)": 0, "Alta (>1.0)": 0 };
+      animales.forEach(a => {
+        if(a.gananciaDiaria < 0.5) dist["Baja (<0.5)"]++;
+        else if(a.gananciaDiaria <= 1.0) dist["Media (0.5-1.0)"]++;
+        else dist["Alta (>1.0)"]++;
+      });
+
+      if (charts.dist) charts.dist.destroy();
+      charts.dist = new Chart(document.getElementById('chartDistribucion'), {
+        type: 'doughnut',
+        data: { labels: Object.keys(dist), datasets: [{ data: Object.values(dist), backgroundColor: ['#e74c3c', '#f1c40f', '#2ecc71'] }] },
+        options: { responsive: true, maintainAspectRatio: false }
       });
     }
 
     function poblarFiltros() {
-      const base = getData(datosGlobales, 'animales', []);
-      const fillSel = (id, prop) => {
-        const sel = document.getElementById(id);
-        [...new Set(base.map(a => a[prop]).filter(v => v))].sort().forEach(v => {
-          const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o);
-        });
+      const base = datosGlobales.animales || [];
+      const f = (id, p) => {
+        const s = document.getElementById(id); s.innerHTML = '<option value="">Todos</option>';
+        [...new Set(base.map(a => a[p]))].sort().forEach(v => { if(v) s.innerHTML += `<option value="${v}">${v}</option>`; });
       };
-      fillSel('filtroLote', 'lote');
-      fillSel('filtroClasif', 'clasificacion');
+      f('filtroLote', 'lote'); f('filtroClasif', 'clasificacion');
     }
 
-    function cambiarTab(tabId) {
+    function cambiarTab(id) {
       document.querySelectorAll('.tab, .tab-content').forEach(el => el.classList.remove('active'));
       event.target.classList.add('active');
-      document.getElementById(`tab-${tabId}`).classList.add('active');
+      document.getElementById('tab-' + id).classList.add('active');
     }
-
-    function mostrarLoader(m) { document.getElementById('loader').style.display = m ? 'block' : 'none'; }
-    function recargarDatos() { cargarDatos(); }
-    function imprimir() { window.print(); }
-    function cerrar() { window.close(); }
+    function mostrarLoader(v) { document.getElementById('loader').style.display = v ? 'block' : 'none'; }
   </script>
 </body>
 </html>
