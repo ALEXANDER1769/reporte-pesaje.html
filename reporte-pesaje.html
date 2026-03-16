@@ -15,12 +15,14 @@
     body { font-family: system-ui, sans-serif; background: var(--fondo); color: #333; line-height: 1.5; }
     .container { max-width: 1400px; margin: auto; padding: 15px; }
     
-    .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; margin-bottom: 20px; border-bottom: 2px solid var(--verde); }
-    .header h1 { color: var(--verde); font-size: 22px; }
+    .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; margin-bottom: 20px; border-bottom: 2px solid var(--verde); flex-wrap: wrap; gap: 10px;}
+    .header h1 { color: var(--verde); font-size: 22px; margin: 0; }
     
-    .btn { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: opacity 0.2s; }
+    .btn { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: opacity 0.2s; display: inline-flex; align-items: center; gap: 5px;}
+    .btn:hover { opacity: 0.9; }
     .btn-primary { background: var(--verde); color: white; }
     .btn-secondary { background: var(--tierra); color: white; }
+    .btn-danger { background: var(--rojo); color: white; }
     
     .card { background: var(--blanco); border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
     .card-title { font-size: 18px; font-weight: 600; color: var(--azul); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--borde); }
@@ -36,7 +38,7 @@
     .tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; }
     .tab { padding: 10px 20px; background: var(--gris); color: white; border: none; border-radius: 6px 6px 0 0; cursor: pointer; white-space: nowrap; }
     .tab.active { background: var(--verde); font-weight: 600; }
-    .tab.alerta { background: var(--rojo); } /* Estilo para pestaña de alertas */
+    .tab.alerta { background: var(--rojo); } 
     .tab.alerta.active { background: #c0392b; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -47,6 +49,7 @@
     td { padding: 10px 8px; border-bottom: 1px solid var(--borde); }
     .negativo { color: var(--rojo); font-weight: bold; }
     .positivo { color: var(--verde); font-weight: bold; }
+    .neutro { color: var(--gris); }
     
     .chart-container { position: relative; height: 350px; width: 100%; margin: 10px 0; }
     
@@ -59,7 +62,8 @@
   <div class="container">
     <div class="header">
       <h1>🐄 Reporte de Pesaje Corporal</h1>
-      <div style="display: flex; gap: 10px;">
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn btn-danger" onclick="volverPanel()">🚪 Volver al Panel</button>
         <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir</button>
         <button class="btn btn-primary" onclick="cargarDatos()">🔄 Actualizar</button>
       </div>
@@ -127,7 +131,7 @@
         <div class="card">
           <div class="table-container">
             <table>
-              <thead><tr><th>ID</th><th>N° Práct.</th><th>Lote</th><th>Clasif.</th><th>Peso Actual</th><th>Ganancia</th><th>Meta</th></tr></thead>
+              <thead><tr><th>ID</th><th>N° Práct.</th><th>Lote</th><th>Clasif.</th><th>Peso Ant.</th><th>Peso Act.</th><th>Ganancia</th><th>Meta</th></tr></thead>
               <tbody id="tbodyDetalle"></tbody>
             </table>
           </div>
@@ -140,7 +144,7 @@
           <p style="margin-bottom: 15px; color: var(--gris); font-size: 14px;">Lista de animales cuya ganancia diaria promedio es menor a 0 kg/día.</p>
           <div class="table-container">
             <table>
-              <thead><tr><th>ID</th><th>N° Práctico</th><th>Lote</th><th>Clasificación</th><th>Peso Actual</th><th>Pérdida (kg/día)</th></tr></thead>
+              <thead><tr><th>ID</th><th>N° Práctico</th><th>Lote</th><th>Clasificación</th><th>Peso Ant.</th><th>Peso Act.</th><th>Pérdida (kg/día)</th></tr></thead>
               <tbody id="tbodyDesmejorados"></tbody>
             </table>
           </div>
@@ -156,10 +160,16 @@
     let datosGlobales = null;
     let charts = { evol: null, dist: null, lote: null };
 
-    // Paleta de colores para múltiples líneas en el gráfico de lotes
+    // Paleta de cores para múltiplas linhas no gráfico de lotes
     const paletaColores = ['#2c4f7c', '#e74c3c', '#2ecc71', '#f1c40f', '#8e44ad', '#e67e22', '#1abc9c', '#34495e'];
 
     document.addEventListener('DOMContentLoaded', cargarDatos);
+
+    // FUNÇÃO ATUALIZADA PARA VOLTAR AO GOOGLE SITES
+    function volverPanel() {
+      // Redirecionamento absoluto para o teu painel do PYSIGA
+      window.top.location.href = "https://www.pysiga.com/dataganadera";
+    }
 
     async function cargarDatos() {
       mostrarLoader(true);
@@ -185,7 +195,7 @@
       const fClas = document.getElementById('filtroClasif').value;
       const meta = parseFloat(document.getElementById('metaGanancia').value) || 0;
 
-      // Filtrado de la lista base
+      // Filtrado da lista base
       const animales = (datosGlobales.animales || []).filter(a => 
         (!fLote || a.lote === fLote) && (!fClas || a.clasificacion === fClas));
 
@@ -204,7 +214,7 @@
     }
 
     function renderizar(animales, meta, loteFiltrado) {
-      // 1. Gráfico Evolución General
+      // 1. Gráfico Evolução Geral
       const evolData = datosGlobales.graficos?.evolucionGananciaGeneral || [];
       if (charts.evol) charts.evol.destroy();
       charts.evol = new Chart(document.getElementById('chartEvolucion'), {
@@ -219,14 +229,11 @@
         options: { responsive: true, maintainAspectRatio: false }
       });
 
-      // 2. Gráfico por Lotes (NUEVO: LÍNEAS MULTIPLES)
+      // 2. Gráfico por Lotes (LINHAS MÚLTIPLAS)
       const evolLotesObj = datosGlobales.graficos?.evolucionPorLote || {};
       let lotesKeys = Object.keys(evolLotesObj);
       
-      // Si el usuario seleccionó un lote específico en el filtro, solo mostramos ese
       if (loteFiltrado) lotesKeys = lotesKeys.filter(l => l === loteFiltrado);
-
-      // Obtener todas las fechas únicas de los lotes a mostrar para el eje X
       const fechasUnicas = [...new Set(lotesKeys.flatMap(lote => evolLotesObj[lote].map(d => d.fecha)))].sort();
 
       const datasetsLotes = lotesKeys.map((lote, index) => {
@@ -234,13 +241,13 @@
           label: lote,
           data: fechasUnicas.map(fecha => {
             const registro = evolLotesObj[lote].find(d => d.fecha === fecha);
-            return registro ? registro.gananciaPromedio : null; // null evita que la línea caiga a 0 si no hay dato
+            return registro ? registro.gananciaPromedio : null; 
           }),
           borderColor: paletaColores[index % paletaColores.length],
           backgroundColor: paletaColores[index % paletaColores.length],
           tension: 0.3,
           fill: false,
-          spanGaps: true // Conecta los puntos si falta alguna fecha intermedia
+          spanGaps: true
         };
       });
 
@@ -251,7 +258,7 @@
         options: { responsive: true, maintainAspectRatio: false }
       });
 
-      // 3. Tablas (Resumen Lotes y Detalle)
+      // 3. Tabelas (Resumo Lotes e Detalhe)
       const lotesActuales = {};
       animales.forEach(a => {
         if(!lotesActuales[a.lote]) lotesActuales[a.lote] = { g: [], kg: 0, n: 0 };
@@ -267,35 +274,48 @@
         tbL.innerHTML += `<tr><td><strong>${l}</strong></td><td>${lotesActuales[l].n}</td><td>${Math.round(lotesActuales[l].kg)}</td><td class="${prom<0?'negativo':'positivo'}">${prom.toFixed(2)}</td></tr>`;
       });
 
+      // Preenchimento do Detalhe de Animais
       const tbD = document.getElementById('tbodyDetalle'); tbD.innerHTML = '';
       animales.forEach(a => {
         const cumple = meta > 0 && a.gananciaDiaria >= meta;
-        tbD.innerHTML += `<tr><td>${a.id}</td><td>${a.numeroPractico || '-'}</td><td>${a.lote}</td><td>${a.clasificacion}</td><td>${a.pesoActual}</td><td class="${a.gananciaDiaria<0?'negativo':'positivo'}">${(a.gananciaDiaria||0).toFixed(2)}</td><td>${meta>0 ? (cumple?'✅':'❌') : '-'}</td></tr>`;
+        const pesoAntTxt = a.pesoAnterior ? `${a.pesoAnterior} kg` : `<span class="neutro">S/D</span>`;
+        
+        tbD.innerHTML += `<tr>
+          <td>${a.id}</td>
+          <td>${a.numeroPractico || '-'}</td>
+          <td>${a.lote}</td>
+          <td>${a.clasificacion}</td>
+          <td>${pesoAntTxt}</td>
+          <td><strong>${a.pesoActual} kg</strong></td>
+          <td class="${a.gananciaDiaria<0?'negativo':'positivo'}">${(a.gananciaDiaria||0).toFixed(2)}</td>
+          <td>${meta>0 ? (cumple?'✅':'❌') : '-'}</td>
+        </tr>`;
       });
       
-      // 4. NUEVA TABLA: Animales Desmejorados
+      // 4. Preenchimento de Animais Desmelhorados
       const tbDesm = document.getElementById('tbodyDesmejorados');
       tbDesm.innerHTML = '';
-      // Filtrar los que pierden peso (ganancia < 0) y ordenar de peor a mejor
       const desmejorados = animales.filter(a => a.gananciaDiaria !== null && a.gananciaDiaria < 0)
                                    .sort((a, b) => a.gananciaDiaria - b.gananciaDiaria);
       
       if (desmejorados.length === 0) {
-        tbDesm.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px;">🎉 Excelente: Ningún animal está perdiendo peso actualmente.</td></tr>`;
+        tbDesm.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px;">🎉 Excelente: Ningún animal está perdiendo peso actualmente.</td></tr>`;
       } else {
         desmejorados.forEach(a => {
+          const pesoAntTxt = a.pesoAnterior ? `${a.pesoAnterior} kg` : '-';
           tbDesm.innerHTML += `<tr>
             <td><strong>${a.id}</strong></td>
             <td>${a.numeroPractico || '-'}</td>
             <td>${a.lote}</td>
             <td>${a.clasificacion}</td>
-            <td>${a.pesoActual} kg</td>
+            <td>${pesoAntTxt}</td>
+            <td><strong>${a.pesoActual} kg</strong></td>
             <td class="negativo">📉 ${a.gananciaDiaria.toFixed(2)}</td>
           </tr>`;
         });
       }
 
-      // 5. Distribución (Torta)
+      // 5. Distribuição (Gráfico de Tarte)
       const dist = { "Baja (<0.5)": 0, "Media (0.5-1.0)": 0, "Alta (>1.0)": 0 };
       animales.forEach(a => {
         if(a.gananciaDiaria < 0.5) dist["Baja (<0.5)"]++;
