@@ -7,95 +7,160 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      --verde: #2f6f4e; --verde-claro: #e6f1eb; --azul: #2c4f7c;
-      --tierra: #8b6f47; --rojo: #e74c3c; --gris: #7f8c8d;
-      --fondo: #f7f9f8; --blanco: #ffffff; --borde: #ddd;
+      /* COLORES VIVOS Y MODERNOS */
+      --verde: #00b894; 
+      --verde-claro: #55efc4; 
+      --azul: #0984e3; 
+      --azul-claro: #74b9ff;
+      --tierra: #e17055; 
+      --rojo: #d63031; 
+      --gris: #636e72; 
+      --gris-claro: #dfe6e9;
+      --morado: #6c5ce7; 
+      --fondo: #f4f6f8; 
+      --blanco: #ffffff; 
+      --alerta: #fdcb6e; 
+      --borde: #dfe6e9;
     }
+    
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, sans-serif; background: var(--fondo); color: #333; line-height: 1.5; padding: 20px;}
-    .container { max-width: 1400px; margin: auto; padding: 25px; background: white; border-radius: 12px; box-shadow: 0 3px 12px rgba(0,0,0,0.1);}
+    body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--fondo); color: #2d3436; line-height: 1.5; padding: 20px;}
+    .container { max-width: 1400px; margin: auto; padding: 25px; background: var(--blanco); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);}
     
-    .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; margin-bottom: 20px; border-bottom: 2px solid var(--verde); flex-wrap: wrap; gap: 10px;}
-    .header h1 { color: var(--verde); font-size: 24px; margin: 0; }
-    
-    .btn { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: opacity 0.2s; display: inline-flex; align-items: center; gap: 5px;}
-    .btn:hover { opacity: 0.9; }
+    /* ENCABEZADOS CENTRADOS */
+    h1, h2, h3, .card-title { text-align: center; font-weight: 800; color: var(--azul); }
+    .header { display: flex; justify-content: center; align-items: center; flex-direction: column; padding: 15px 0; margin-bottom: 25px; position: relative; }
+    .header h1 { color: var(--azul); font-size: 28px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;}
+    .header-botones { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; position: absolute; right: 0; top: 15px; }
+
+    .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: transform 0.2s, box-shadow 0.2s; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);}
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
     .btn-primary { background: var(--verde); color: white; }
     .btn-secondary { background: var(--tierra); color: white; }
     
-    .btn-volver { background: var(--azul); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin: 30px auto 0; font-size: 16px; display: block; font-weight: bold; transition: all 0.2s; }
-    .btn-volver:hover { background: #1e3a5f; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+    .btn-volver { background: var(--azul); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin: 30px auto 0; font-size: 16px; display: block; font-weight: bold; transition: all 0.2s; box-shadow: 0 4px 10px rgba(9,132,227,0.3); }
+    .btn-volver:hover { background: #074b83; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(9,132,227,0.4); }
     
-    .card { background: var(--blanco); border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); border: 1px solid var(--borde); }
-    .card-title { font-size: 18px; font-weight: 600; color: var(--azul); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--borde); }
+    .card { background: var(--blanco); border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.06); border-top: 5px solid var(--verde); }
+    .card-title { font-size: 20px; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 0.5px; border-bottom: none; }
     
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-    .kpi-card { background: var(--verde-claro); padding: 15px; border-radius: 8px; text-align: center; border-left: 4px solid var(--verde); }
-    .kpi-value { font-size: 28px; font-weight: 700; color: var(--verde); margin: 5px 0; }
-    .kpi-label { font-size: 13px; color: var(--gris); }
+    /* FILTROS VIBRANTES */
+    .filters { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; align-items: center; background: linear-gradient(135deg, #e4fbf4 0%, #ffffff 100%); padding: 15px; border-radius: 8px; border-left: 6px solid var(--verde); margin-bottom: 25px;}
+    .filters label { font-weight: 700; color: #2d3436; }
+    .filters select, .filters input { padding: 8px 15px; border: 2px solid var(--verde-claro); border-radius: 6px; font-size: 15px; font-weight: bold; color: var(--azul); outline: none;}
+    .filters select:focus, .filters input:focus { border-color: var(--verde); }
     
-    .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; align-items: center; background: var(--verde-claro); padding: 15px; border-radius: 8px; }
-    .filters select, .filters input { padding: 8px 12px; border: 1px solid var(--borde); border-radius: 6px; font-size: 14px; }
+    /* KPI GRID MEJORADO */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 30px; }
+    .kpi-card { background: var(--blanco); padding: 20px 15px; border-radius: 12px; text-align: center; border-top: 5px solid var(--gris); box-shadow: 0 4px 8px rgba(0,0,0,0.06); transition: transform 0.2s; }
+    .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
     
-    .tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; }
-    .tab { padding: 10px 20px; background: var(--gris); color: white; border: none; border-radius: 6px 6px 0 0; cursor: pointer; white-space: nowrap; font-size: 15px; }
-    .tab.active { background: var(--verde); font-weight: 600; }
-    .tab.alerta { background: var(--rojo); } 
-    .tab.alerta.active { background: #c0392b; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
+    .kpi-label { font-size: 13px; color: var(--azul); font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+    .kpi-value { font-size: 36px; font-weight: 900; color: #2d3436; margin: 5px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
+    .kpi-meta-obj { font-size: 12px; font-weight: 700; color: #fff; background: var(--gris); padding: 4px 10px; border-radius: 20px; display: inline-block; margin-bottom: 8px; letter-spacing: 0.5px; }
     
-    .table-container { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th { background: var(--verde); color: white; padding: 12px 8px; text-align: left; }
-    td { padding: 10px 8px; border-bottom: 1px solid var(--borde); }
-    .negativo { color: var(--rojo); font-weight: bold; }
-    .positivo { color: var(--verde); font-weight: bold; }
-    .neutro { color: var(--gris); }
-    
-    .chart-container { position: relative; height: 350px; width: 100%; margin: 10px 0; }
-    
-    #loader { text-align: center; padding: 60px 20px; font-size: 20px; color: var(--azul); }
-    @keyframes mover { from { transform: translateX(-8px) rotate(-5deg); } to { transform: translateX(8px) rotate(5deg); } }
-    .vaca { font-size: 60px; animation: mover 1.2s infinite alternate; margin-bottom: 20px;}
+    .estado-excelente { border-top-color: var(--excelente) !important; }
+    .estado-excelente .kpi-meta-obj { background: var(--excelente); }
+    .estado-alerta { border-top-color: var(--rojo) !important; }
+    .estado-alerta .kpi-meta-obj { background: var(--rojo); }
+    .estado-info { border-top-color: var(--azul) !important; }
+    .estado-info .kpi-meta-obj { background: var(--azul); }
+    .estado-neutro { border-top-color: var(--morado) !important; }
+    .estado-neutro .kpi-meta-obj { background: var(--morado); }
 
-    .error { color: #c0392b; padding: 20px; background: #fadbd8; border-radius: 10px; margin: 30px 0; text-align: center; font-size: 16px; display: none; border-left: 4px solid #c0392b; }
+    .kpi-unit { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 12px; display: inline-block; margin-top: 5px; background: #f4f6f8; color: var(--gris); }
+
+    /* TABS CENTRADOS */
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; justify-content: center; padding-bottom: 5px;}
+    .tab { padding: 12px 24px; background: var(--gris-claro); color: var(--gris); border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 15px; font-weight: bold; transition: all 0.2s;}
+    .tab:hover { background: #d1d8dc; }
+    .tab.active { background: var(--azul); color: white; box-shadow: 0 4px 8px rgba(9,132,227,0.3); }
+    .tab.alerta { background: #fab1a0; color: #d63031; } 
+    .tab.alerta.active { background: var(--rojo); color: white; box-shadow: 0 4px 8px rgba(214,48,49,0.3); }
+    .tab-content { display: none; animation: fadeIn 0.4s; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* TABLAS MODERNAS */
+    .table-container { overflow-x: auto; border-radius: 8px; border: 1px solid var(--gris-claro); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: center; }
+    th { background: var(--azul); color: white; padding: 14px 10px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+    td { padding: 12px 10px; border-bottom: 1px solid var(--gris-claro); }
+    tr:nth-child(even) { background-color: #f8fafd; }
+    tr:hover { background: #eef5ff; }
+    
+    .negativo { color: var(--rojo); font-weight: 900; }
+    .positivo { color: var(--verde); font-weight: 900; }
+    .neutro { color: var(--gris); font-style: italic;}
+    
+    .chart-container { position: relative; height: 380px; width: 100%; margin: 15px 0; }
+    
+    /* LOADER VIBRANTE */
+    #loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; color: var(--azul); font-weight: bold; font-size: 18px; letter-spacing: 1px;}
+    @keyframes mover { from { transform: translateY(0) scale(1); } to { transform: translateY(-15px) scale(1.1); } }
+    .vaca { font-size: 70px; margin-bottom: 20px; animation: mover 0.8s infinite alternate ease-in-out;}
+
+    .error { color: white; padding: 20px; background: var(--rojo); border-radius: 10px; margin: 30px 0; text-align: center; font-size: 16px; display: none; font-weight: bold; box-shadow: 0 4px 10px rgba(214,48,49,0.3); }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>🐄 Reporte de Pesaje Corporal</h1>
-      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <h1>🥩 Panel de Rendimiento y Ganancia de Peso</h1>
+      <div class="header-botones">
         <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir</button>
         <button class="btn btn-primary" onclick="cargarDatos()">🔄 Actualizar</button>
       </div>
     </div>
     
+    <div class="filters">
+        <label>📦 Filtrar por Lote:</label>
+        <select id="filtroLote" onchange="aplicarFiltros()"><option value="">Todos los Lotes</option></select>
+        
+        <label>🏷️ Filtrar por Clasificación:</label>
+        <select id="filtroClasif" onchange="aplicarFiltros()"><option value="">Todas</option></select>
+        
+        <label>🎯 Meta Diaria (kg/día):</label>
+        <input type="number" id="metaGanancia" step="0.1" value="0.80" onchange="aplicarFiltros()" style="width: 90px; text-align:center;">
+    </div>
+
     <div id="loader">
       <div class="vaca">🐄</div>
-      <p>Cargando datos de pesaje...</p>
+      <p>Procesando báscula y analizando datos...</p>
     </div>
     
     <div id="error" class="error"></div>
 
     <div id="contenido" style="display: none;">
-      <div class="card">
-        <div class="filters">
-          <label><strong>Lote:</strong></label>
-          <select id="filtroLote" onchange="aplicarFiltros()"><option value="">Todos</option></select>
-          <label><strong>Clasificación:</strong></label>
-          <select id="filtroClasif" onchange="aplicarFiltros()"><option value="">Todas</option></select>
-          <label><strong>Meta (kg/día):</strong></label>
-          <input type="number" id="metaGanancia" step="0.1" value="0.80" onchange="aplicarFiltros()" style="width: 80px;">
-        </div>
-      </div>
       
       <div class="kpi-grid">
-        <div class="kpi-card"><div class="kpi-label">Ganancia Diaria Prom.</div><div class="kpi-value" id="kpiG">0.00</div><div class="kpi-unit">kg/día</div></div>
-        <div class="kpi-card"><div class="kpi-label">Kilos Totales</div><div class="kpi-value" id="kpiK">0</div><div class="kpi-unit">kg actuales</div></div>
-        <div class="kpi-card"><div class="kpi-label">Animales Evaluados</div><div class="kpi-value" id="kpiA">0</div><div class="kpi-unit">cabezas</div></div>
-        <div class="kpi-card" style="border-left-color: var(--azul);"><div class="kpi-label">Meta Cumplida</div><div class="kpi-value" id="kpiM" style="color: var(--azul);">0</div><div id="kpiMPorc" class="kpi-unit">0% del total</div></div>
+        <div class="kpi-card estado-excelente">
+            <div class="kpi-label">Ganancia Diaria Prom.</div>
+            <div class="kpi-value" id="kpiG">0.00</div>
+            <div class="kpi-meta-obj" id="lblMetaObj">Meta: ≥ 0.80 kg/día</div><br>
+            <div class="kpi-unit" style="background: #e8f8f5; color: var(--excelente);">kg/día en promedio</div>
+        </div>
+        
+        <div class="kpi-card estado-info">
+            <div class="kpi-label">Meta Cumplida</div>
+            <div class="kpi-value" id="kpiM">0</div>
+            <div class="kpi-meta-obj">Rendimiento Óptimo</div><br>
+            <div id="kpiMPorc" class="kpi-unit" style="background: #eef5ff; color: var(--azul);">0% del rebaño</div>
+        </div>
+
+        <div class="kpi-card estado-neutro">
+            <div class="kpi-label">Biomasa Total (Kilos)</div>
+            <div class="kpi-value" id="kpiK">0</div>
+            <div class="kpi-meta-obj">Capital en Pie</div><br>
+            <div class="kpi-unit">kg actuales netos</div>
+        </div>
+        
+        <div class="kpi-card" style="border-top-color: var(--tierra);">
+            <div class="kpi-label">Población Evaluada</div>
+            <div class="kpi-value" id="kpiA">0</div>
+            <div class="kpi-meta-obj" style="background: var(--tierra);">Animales Pesados</div><br>
+            <div class="kpi-unit">cabezas en control</div>
+        </div>
       </div>
       
       <div class="tabs">
@@ -106,26 +171,27 @@
       </div>
       
       <div id="tab-general" class="tab-content active">
-        <div class="card">
-          <div class="card-title">📈 Evolución de Ganancia Diaria General</div>
+        <div class="card" style="border-top-color: var(--azul);">
+          <div class="card-title">📈 Curva de Evolución de Ganancia Diaria</div>
           <div class="chart-container"><canvas id="chartEvolucion"></canvas></div>
         </div>
-        <div class="card">
-          <div class="card-title">⚖️ Distribución de Rendimiento Actual</div>
+        <div class="card" style="border-top-color: var(--morado);">
+          <div class="card-title">📊 Distribución de Rendimiento en el Rebaño</div>
+          <p style="text-align:center; color: var(--gris); font-size:14px; margin-bottom: 10px;">Clasificación de animales según su eficiencia de engorde.</p>
           <div class="chart-container"><canvas id="chartDistribucion"></canvas></div>
         </div>
       </div>
       
       <div id="tab-lotes" class="tab-content">
-        <div class="card">
-          <div class="card-title">📈 Evolución de Ganancia por Lotes</div>
+        <div class="card" style="border-top-color: var(--tierra);">
+          <div class="card-title">📈 Comparativa de Rendimiento por Lotes</div>
           <div class="chart-container"><canvas id="chartLotes"></canvas></div>
         </div>
         <div class="card">
-          <div class="card-title">📋 Resumen Actual por Lote</div>
+          <div class="card-title">📋 Resumen Actualizado por Lote</div>
           <div class="table-container">
             <table>
-              <thead><tr><th>Lote</th><th>Cabezas</th><th>Kilos Totales</th><th>Ganancia Prom. (Actual)</th></tr></thead>
+              <thead><tr><th>Identificador de Lote</th><th>Cabezas Evaluadas</th><th>Biomasa (Kilos Totales)</th><th>Ganancia Promedio (Actual)</th></tr></thead>
               <tbody id="tbodyLotes"></tbody>
             </table>
           </div>
@@ -133,10 +199,11 @@
       </div>
       
       <div id="tab-detalle" class="tab-content">
-        <div class="card">
+        <div class="card" style="border-top-color: var(--verde);">
+          <div class="card-title">📋 Registro Individual de Pesaje</div>
           <div class="table-container">
             <table>
-              <thead><tr><th>ID</th><th>N° Práct.</th><th>Lote</th><th>Clasif.</th><th>Peso Ant.</th><th>Peso Act.</th><th>Ganancia</th><th>Meta</th></tr></thead>
+              <thead><tr><th>ID Animal</th><th>N° Práct.</th><th>Lote</th><th>Clasificación</th><th>Peso Anterior</th><th>Peso Actual</th><th>Ganancia (kg/día)</th><th>Estatus Meta</th></tr></thead>
               <tbody id="tbodyDetalle"></tbody>
             </table>
           </div>
@@ -144,19 +211,19 @@
       </div>
 
       <div id="tab-alertas" class="tab-content">
-        <div class="card" style="border-left: 5px solid var(--rojo);">
-          <div class="card-title" style="color: var(--rojo);">⚠️ Animales con Pérdida de Peso (Desmejorados)</div>
-          <p style="margin-bottom: 15px; color: var(--gris); font-size: 14px;">Lista de animales cuya ganancia diaria promedio es menor a 0 kg/día.</p>
+        <div class="card" style="border-top-color: var(--rojo); background: #fffcfc;">
+          <div class="card-title" style="color: var(--rojo);">⚠️ Alerta Sanitaria / Nutricional: Pérdida de Peso</div>
+          <p style="text-align:center; margin-bottom: 20px; color: var(--rojo); font-weight: bold;">Lista de animales cuya ganancia diaria promedio es negativa (están perdiendo kilos).</p>
           <div class="table-container">
             <table>
-              <thead><tr><th>ID</th><th>N° Práctico</th><th>Lote</th><th>Clasificación</th><th>Peso Ant.</th><th>Peso Act.</th><th>Pérdida (kg/día)</th></tr></thead>
+              <thead><tr style="background: var(--rojo);"><th>ID Animal</th><th>N° Práctico</th><th>Lote</th><th>Clasificación</th><th>Peso Anterior</th><th>Peso Actual</th><th>Pérdida (kg/día)</th></tr></thead>
               <tbody id="tbodyDesmejorados"></tbody>
             </table>
           </div>
         </div>
       </div>
 
-      <button class="btn-volver" id="btnVolver">⬅ Cerrar reporte y volver al panel</button>
+      <button class="btn-volver" id="btnVolver">⬅ Cerrar Reporte y Volver al Panel Principal</button>
 
     </div>
   </div>
@@ -166,12 +233,26 @@
     let emailActivo = "";
     let datosGlobales = null;
     let charts = { evol: null, dist: null, lote: null };
-    const paletaColores = ['#2c4f7c', '#e74c3c', '#2ecc71', '#f1c40f', '#8e44ad', '#e67e22', '#1abc9c', '#34495e'];
+    const paletaColores = ['#0984e3', '#e17055', '#00b894', '#fdcb6e', '#6c5ce7', '#d63031', '#00cec9', '#2d3436'];
+
+    // 🔥 PLUGIN CUSTOM PARA EFECTO 3D EN LAS BARRAS Y LÍNEAS
+    const pluginSombra3D = {
+      id: 'sombra3D',
+      beforeDatasetsDraw: function(chart) {
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.25)'; // Sombra elegante
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetX = 4;
+        ctx.shadowOffsetY = 4;
+      },
+      afterDatasetsDraw: function(chart) {
+        chart.ctx.restore();
+      }
+    };
+    Chart.register(pluginSombra3D);
 
     document.addEventListener('DOMContentLoaded', function() {
-      console.log("🚀 Iniciando reporte de pesaje...");
-
-      // Carga el correo desde la URL
       const params = new URLSearchParams(window.location.search);
       emailActivo = params.get("email");
 
@@ -179,13 +260,9 @@
         mostrarError("Acceso no autorizado. Inicie sesión desde el panel principal.");
         return;
       }
-
-      console.log("📧 Email:", emailActivo);
       cargarDatos();
 
       document.getElementById("btnVolver").addEventListener("click", function() {
-        console.log("✅ Cerrando pestaña del reporte...");
-        // Volver atrás en historial o cerrar ventana
         if (window.history.length > 1) {
           window.history.back();
         } else {
@@ -208,18 +285,14 @@
         return response.json();
       })
       .then(data => {
-        console.log("✅ Datos de pesaje recibidos", data);
         if (!data.ok) throw new Error(data.error || "Respuesta inválida del servidor");
-        
         datosGlobales = data;
         poblarFiltros();
         aplicarFiltros();
-        
         mostrarLoader(false);
         document.getElementById('contenido').style.display = 'block';
       })
       .catch(err => {
-        console.error("❌ Error:", err);
         mostrarError("Error al cargar los datos: " + err.message);
       });
     }
@@ -229,6 +302,9 @@
       const fLote = document.getElementById('filtroLote').value;
       const fClas = document.getElementById('filtroClasif').value;
       const meta = parseFloat(document.getElementById('metaGanancia').value) || 0;
+
+      // Actualizar texto de la meta dinámicamente
+      document.getElementById('lblMetaObj').textContent = `Meta: ≥ ${meta.toFixed(2)} kg/día`;
 
       const animales = (datosGlobales.animales || []).filter(a => 
         (!fLote || a.lote === fLote) && (!fClas || a.clasificacion === fClas));
@@ -242,13 +318,13 @@
       document.getElementById('kpiK').textContent = Math.round(animales.reduce((s, a) => s + (a.pesoActual || 0), 0)).toLocaleString();
       document.getElementById('kpiA').textContent = animales.length;
       document.getElementById('kpiM').textContent = mCount;
-      document.getElementById('kpiMPorc').textContent = (conG.length ? (mCount/conG.length*100).toFixed(1) : 0) + "% del total";
+      document.getElementById('kpiMPorc').textContent = (conG.length ? (mCount/conG.length*100).toFixed(1) : 0) + "% del rebaño evaluado";
 
       renderizar(animales, meta, fLote);
     }
 
     function renderizar(animales, meta, loteFiltrado) {
-      // 1. Gráfico Evolución
+      // 1. Gráfico Evolución (Línea)
       const evolData = datosGlobales.graficos?.evolucionGananciaGeneral || [];
       if (charts.evol) charts.evol.destroy();
       charts.evol = new Chart(document.getElementById('chartEvolucion'), {
@@ -256,14 +332,38 @@
         data: {
           labels: evolData.map(d => d.fecha),
           datasets: [
-            { label: 'Promedio General (kg/día)', data: evolData.map(d => d.gananciaPromedio), borderColor: '#2f6f4e', tension: 0.3, fill: false },
-            meta > 0 ? { label: 'Meta', data: evolData.map(() => meta), borderColor: '#7f8c8d', borderDash: [5, 5], pointRadius: 0, fill: false } : null
+            { 
+              label: 'Promedio General (kg/día)', 
+              data: evolData.map(d => d.gananciaPromedio), 
+              borderColor: '#0984e3', 
+              backgroundColor: 'rgba(9, 132, 227, 0.1)',
+              borderWidth: 4,
+              tension: 0.4, 
+              fill: true,
+              pointBackgroundColor: '#fff',
+              pointBorderColor: '#0984e3',
+              pointRadius: 5,
+              pointHoverRadius: 8
+            },
+            meta > 0 ? { 
+              label: 'Meta Deseada', 
+              data: evolData.map(() => meta), 
+              borderColor: '#d63031', 
+              borderDash: [8, 6], 
+              borderWidth: 2,
+              pointRadius: 0, 
+              fill: false 
+            } : null
           ].filter(Boolean)
         },
-        options: { responsive: true, maintainAspectRatio: false }
+        options: { 
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'top', labels: { font: { weight: 'bold' } } } },
+          scales: { y: { beginAtZero: true, title: { display: true, text: 'KG / DÍA', font: {weight: 'bold'} } } }
+        }
       });
 
-      // 2. Gráfico Lotes
+      // 2. Gráfico Lotes (Líneas comparativas)
       const evolLotesObj = datosGlobales.graficos?.evolucionPorLote || {};
       let lotesKeys = Object.keys(evolLotesObj);
       
@@ -279,7 +379,9 @@
           }),
           borderColor: paletaColores[index % paletaColores.length],
           backgroundColor: paletaColores[index % paletaColores.length],
-          tension: 0.3, fill: false, spanGaps: true
+          borderWidth: 3,
+          tension: 0.4, fill: false, spanGaps: true,
+          pointRadius: 4
         };
       });
 
@@ -287,10 +389,47 @@
       charts.lote = new Chart(document.getElementById('chartLotes'), {
         type: 'line',
         data: { labels: fechasUnicas, datasets: datasetsLotes },
-        options: { responsive: true, maintainAspectRatio: false }
+        options: { 
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'top', labels: { font: { weight: 'bold' } } } },
+          scales: { y: { title: { display: true, text: 'KG / DÍA', font: {weight: 'bold'} } } }
+        }
       });
 
-      // 3. Tablas
+      // 3. Distribución (AHORA BARRAS 3D EN VEZ DE DONA PARA MEJORAR IMPACTO VISUAL)
+      const dist = { "Bajo Rend. (<0.5)": 0, "Rend. Medio (0.5-1.0)": 0, "Alto Rend. (>1.0)": 0 };
+      animales.forEach(a => {
+        if(a.gananciaDiaria < 0.5) dist["Bajo Rend. (<0.5)"]++;
+        else if(a.gananciaDiaria <= 1.0) dist["Rend. Medio (0.5-1.0)"]++;
+        else dist["Alto Rend. (>1.0)"]++;
+      });
+
+      if (charts.dist) charts.dist.destroy();
+      charts.dist = new Chart(document.getElementById('chartDistribucion'), {
+        type: 'bar',
+        data: { 
+          labels: Object.keys(dist), 
+          datasets: [{ 
+            label: 'Cantidad de Animales',
+            data: Object.values(dist), 
+            backgroundColor: ['#d63031', '#fdcb6e', '#00b894'],
+            borderColor: '#2d3436',
+            borderWidth: 2,
+            borderRadius: 8,
+            hoverOffset: 4
+          }] 
+        },
+        options: { 
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { 
+            y: { beginAtZero: true, title: { display: true, text: 'CANTIDAD DE ANIMALES', font: {weight: 'bold'} }, ticks: { stepSize: 1 } },
+            x: { ticks: { font: {weight: 'bold', size: 13} } }
+          }
+        }
+      });
+
+      // 4. Llenar Tablas
       const lotesActuales = {};
       animales.forEach(a => {
         if(!lotesActuales[a.lote]) lotesActuales[a.lote] = { g: [], kg: 0, n: 0 };
@@ -303,7 +442,7 @@
       Object.keys(lotesActuales).forEach((l) => {
         const arr = lotesActuales[l].g;
         const prom = arr.length ? arr.reduce((s,v)=>s+v,0)/arr.length : 0;
-        tbL.innerHTML += `<tr><td><strong>${l}</strong></td><td>${lotesActuales[l].n}</td><td>${Math.round(lotesActuales[l].kg)}</td><td class="${prom<0?'negativo':'positivo'}">${prom.toFixed(2)}</td></tr>`;
+        tbL.innerHTML += `<tr><td style="color:var(--azul); font-weight:bold;">${l}</td><td><b>${lotesActuales[l].n}</b></td><td>${Math.round(lotesActuales[l].kg).toLocaleString()} kg</td><td class="${prom<0?'negativo':'positivo'}">${prom.toFixed(2)} kg/día</td></tr>`;
       });
 
       const tbD = document.getElementById('tbodyDetalle'); tbD.innerHTML = '';
@@ -311,41 +450,26 @@
         const cumple = meta > 0 && a.gananciaDiaria >= meta;
         const pesoAntTxt = a.pesoAnterior ? `${a.pesoAnterior} kg` : `<span class="neutro">S/D</span>`;
         tbD.innerHTML += `<tr>
-          <td>${a.id}</td><td>${a.numeroPractico || '-'}</td><td>${a.lote}</td><td>${a.clasificacion}</td>
-          <td>${pesoAntTxt}</td><td><strong>${a.pesoActual} kg</strong></td>
+          <td style="color:var(--azul); font-weight:bold;">${a.id}</td><td><b>${a.numeroPractico || '-'}</b></td><td>${a.lote}</td><td>${a.clasificacion}</td>
+          <td>${pesoAntTxt}</td><td><strong style="font-size:15px;">${a.pesoActual} kg</strong></td>
           <td class="${a.gananciaDiaria<0?'negativo':'positivo'}">${(a.gananciaDiaria||0).toFixed(2)}</td>
-          <td>${meta>0 ? (cumple?'✅':'❌') : '-'}</td>
+          <td style="font-size: 16px;">${meta>0 ? (cumple?'✅':'❌') : '-'}</td>
         </tr>`;
       });
       
       const tbDesm = document.getElementById('tbodyDesmejorados'); tbDesm.innerHTML = '';
       const desmejorados = animales.filter(a => a.gananciaDiaria !== null && a.gananciaDiaria < 0).sort((a, b) => a.gananciaDiaria - b.gananciaDiaria);
       if (desmejorados.length === 0) {
-        tbDesm.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px;">🎉 Excelente: Ningún animal está perdiendo peso actualmente.</td></tr>`;
+        tbDesm.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 25px; font-weight:bold; color:var(--verde); font-size:16px;">🎉 ¡Excelente! Ningún animal está perdiendo peso en este momento.</td></tr>`;
       } else {
         desmejorados.forEach(a => {
           const pesoAntTxt = a.pesoAnterior ? `${a.pesoAnterior} kg` : '-';
           tbDesm.innerHTML += `<tr>
-            <td><strong>${a.id}</strong></td><td>${a.numeroPractico || '-'}</td><td>${a.lote}</td><td>${a.clasificacion}</td>
-            <td>${pesoAntTxt}</td><td><strong>${a.pesoActual} kg</strong></td><td class="negativo">📉 ${a.gananciaDiaria.toFixed(2)}</td>
+            <td style="color:var(--rojo); font-weight:bold;">${a.id}</td><td><b>${a.numeroPractico || '-'}</b></td><td>${a.lote}</td><td>${a.clasificacion}</td>
+            <td>${pesoAntTxt}</td><td><strong style="font-size:15px;">${a.pesoActual} kg</strong></td><td class="negativo">📉 ${a.gananciaDiaria.toFixed(2)}</td>
           </tr>`;
         });
       }
-
-      // 4. Distribución
-      const dist = { "Baja (<0.5)": 0, "Media (0.5-1.0)": 0, "Alta (>1.0)": 0 };
-      animales.forEach(a => {
-        if(a.gananciaDiaria < 0.5) dist["Baja (<0.5)"]++;
-        else if(a.gananciaDiaria <= 1.0) dist["Media (0.5-1.0)"]++;
-        else dist["Alta (>1.0)"]++;
-      });
-
-      if (charts.dist) charts.dist.destroy();
-      charts.dist = new Chart(document.getElementById('chartDistribucion'), {
-        type: 'doughnut',
-        data: { labels: Object.keys(dist), datasets: [{ data: Object.values(dist), backgroundColor: ['#e74c3c', '#f1c40f', '#2ecc71'] }] },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
     }
 
     function poblarFiltros() {
@@ -363,12 +487,12 @@
       document.getElementById('tab-' + id).classList.add('active');
     }
     
-    function mostrarLoader(v) { document.getElementById('loader').style.display = v ? 'block' : 'none'; }
+    function mostrarLoader(v) { document.getElementById('loader').style.display = v ? 'flex' : 'none'; }
     
     function mostrarError(mensaje) {
       mostrarLoader(false);
       const err = document.getElementById("error");
-      err.textContent = mensaje;
+      err.textContent = "❌ " + mensaje;
       err.style.display = "block";
     }
   </script>
